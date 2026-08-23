@@ -37,22 +37,27 @@ Segunda pasada sobre zonas no cubiertas en la ronda 1 (`sounds.js`, `index.js`, 
 
 ## R2-P0 — Bugs de comportamiento (usuario los sufre hoy)
 
-- [ ] **Indicador de turno invertido** [verificado] — `renderJugadores()` en `app.js` calcula
-      `conTurno = tablero.turno === (idx === 0 ? 2 : 1)`, que resalta al jugador que NO tiene el
-      turno. Comprobado en navegador: con `turno === 1` (le toca a X, que es `jug1`) se ilumina
-      `jug2`; tras jugar X (`turno === 2`) se ilumina `jug1`. El HTML inicial arrastra la misma
-      inversión, por eso pasa desapercibido al arrancar. Arreglo: `(idx === 0 ? 1 : 2)` y ajustar
-      las clases iniciales de `jug1`/`jug2` en `index.html`
-- [ ] **El temporizador sigue corriendo con un modal abierto** [verificado] — abrir Ayuda o
-      Estadísticas con el timer activo no lo pausa (medido: 15 s → 13 s en 2 s con el modal
-      abierto). El usuario puede perder el turno por una jugada aleatoria mientras lee la ayuda.
-      Arreglo: pausar en `mostrarAyuda()`/`mostrarEstadisticas()` y reanudar al cerrar
-- [ ] **Botón atrás de Android sin manejar** [verificado: no hay listener `backbutton`] — con un
-      modal abierto, atrás cierra la app en vez de cerrar el modal; en el juego, sale sin
-      confirmación. Añadir listener `backbutton`: cerrar modal si hay uno, si no confirmar salida
-- [ ] **Sin `pause`/`resume`, con `KeepRunning` por defecto (true)** — el `setInterval` del
-      temporizador sigue contando con la app en segundo plano; al volver, el turno puede estar ya
-      perdido. Manejar `pause`/`resume` (o `visibilitychange`) para congelar y restaurar el timer
+- [x] **Indicador de turno invertido** — `renderJugadores()` resaltaba al jugador que NO tenía el
+      turno (`turno === (idx === 0 ? 2 : 1)`). Corregido a `turno === idx + 1` y ajustadas las
+      clases iniciales `conturno`/`sinturno` de `jug1`/`jug2` en `index.html`, que arrastraban la
+      misma inversión. Verificado en navegador en tres turnos consecutivos
+- [x] **El temporizador sigue corriendo con un modal abierto** — `iniciarTimer(reanudar)` admite
+      ahora continuar desde `tiempoRestante` en vez de reiniciar; nuevas `pausarTimer()` /
+      `reanudarTimer()` / `hayModalAbierto()`, enganchadas en `mostrarAyuda`/`cerrarAyuda` y
+      `mostrarEstadisticas`/`cerrarEstadisticas`. Verificado: congela en 14 s durante 2,5 s con el
+      modal abierto y reanuda desde 14 al cerrar
+- [x] **Botón atrás de Android sin manejar** — nuevo `onBackButton()`: cierra el modal abierto si
+      lo hay (ayuda y estadísticas se cierran; los de resultado y torneo ejecutan su acción de
+      aceptar), y si no hay ninguno pide confirmación con doble pulsación mostrando un toast
+      (nuevo `#toast` + estilos + cadena `pulsaAtrasSalir` en es/en). Verificado los cinco casos
+- [x] **Sin `pause`/`resume`, con `KeepRunning` por defecto (true)** — nuevos `onAppPause()` /
+      `onAppResume()` sobre los eventos `pause`/`resume` de Cordova, más `visibilitychange` para
+      el navegador. Verificado: no descuenta en segundo plano y reanuda al volver; en el caso
+      combinado (segundo plano con modal abierto) sigue congelado al volver y solo reanuda al
+      cerrar el modal
+
+Los tres listeners se registran en `bindEvents()`, no dentro del arranque de `deviceready`, para
+que los dos caminos de arranque (Cordova y navegador) compartan el mismo cableado.
 
 ## R2-P1 — Accesibilidad (completar lo que la ronda 1 dejó a medias)
 

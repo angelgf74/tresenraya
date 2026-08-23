@@ -46,7 +46,7 @@
     <!-- Turno / jugadores -->
     <div id="capa-turnos">
         <div class="col-jugador" id="colJugador1">
-            <i id="jug1" class="fa-solid fa-user tipojugador sinturno"></i>
+            <i id="jug1" class="fa-solid fa-user tipojugador conturno"></i>
             <div class="ficha-indicator">
                 <i class="fa-solid fa-times" aria-hidden="true"></i>
             </div>
@@ -62,7 +62,7 @@
         </div>
 
         <div class="col-jugador" id="colJugador2">
-            <i id="jug2" class="fa-brands fa-android tipojugador conturno"></i>
+            <i id="jug2" class="fa-brands fa-android tipojugador sinturno"></i>
             <div class="ficha-indicator">
                 <i class="fa-regular fa-circle" aria-hidden="true"></i>
             </div>
@@ -259,6 +259,9 @@
         </div>
     </div>
 </div>
+
+<!-- Aviso efímero (confirmación de salida con el botón atrás) -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="cordova.js"></script>
 <script src="js/build-config.js"></script>

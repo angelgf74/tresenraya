@@ -17,6 +17,9 @@ const Estado = {
     tiempoLimite: 15,
     tiempoRestante: 0,
     timerInterval: null,
+    timerPausado: false,  // congelado por un modal abierto o por la app en segundo plano
+    appEnPausa: false,
+    salidaPendiente: false, // primer "atrás" pulsado, esperando confirmacion
 
     // Torneo
     modoTorneo: false,
@@ -144,8 +147,9 @@ function renderJugadores() {
     for (let idx = 0; idx < 2; idx++) {
         const el = document.getElementById(`jug${idx + 1}`);
         const icono = Estado.tipoJugador[idx] === 0 ? 'fa-solid fa-user' : 'fa-brands fa-android';
-        // jug1(idx=0) tiene turno cuando tablero.turno==2; jug2(idx=1) cuando turno==1
-        const conTurno = Estado.tablero.turno === (idx === 0 ? 2 : 1) && !Estado.tablero.terminado;
+        // jug1(idx=0) es el jugador 1 (X) y jug2(idx=1) el jugador 2 (O),
+        // asi que tiene el turno el que coincide con tablero.turno (idx + 1).
+        const conTurno = Estado.tablero.turno === idx + 1 && !Estado.tablero.terminado;
         el.className = `${icono} tipojugador ${conTurno ? 'conturno' : 'sinturno'}`;
 
         const col = document.getElementById(`colJugador${idx + 1}`);
@@ -473,10 +477,12 @@ async function deshacerJugada() {
 }
 
 // ── Timer ──────────────────────────────────────────────
-function iniciarTimer() {
+// reanudar=true continua desde Estado.tiempoRestante en vez de volver al limite.
+function iniciarTimer(reanudar) {
     cancelarTimer();
     if (!Estado.timerActivo || Estado.tablero.terminado || esIA(Estado.tablero.turno) || Estado.esperandoIA) return;
-    Estado.tiempoRestante = Estado.tiempoLimite;
+    if (!reanudar) Estado.tiempoRestante = Estado.tiempoLimite;
+    Estado.timerPausado = false;
     renderBajoTablero();
 
     Estado.timerInterval = setInterval(async () => {
@@ -491,6 +497,26 @@ function iniciarTimer() {
 
 function cancelarTimer() {
     if (Estado.timerInterval) { clearInterval(Estado.timerInterval); Estado.timerInterval = null; }
+}
+
+// ── Pausa del temporizador (modales y segundo plano) ──
+// Sin esto el reloj sigue corriendo mientras el usuario lee la ayuda o tiene
+// la app en segundo plano, y pierde el turno por una jugada aleatoria.
+function hayModalAbierto() {
+    return ['modalPartida', 'modalTorneo', 'modalStats', 'modalAyuda']
+        .some(id => document.getElementById(id).style.display !== 'none');
+}
+
+function pausarTimer() {
+    if (!Estado.timerInterval) return;
+    cancelarTimer();
+    Estado.timerPausado = true;
+}
+
+function reanudarTimer() {
+    if (!Estado.timerPausado) return;
+    if (Estado.appEnPausa || hayModalAbierto()) return;
+    iniciarTimer(true);
 }
 
 async function tiempoAgotado() {
@@ -555,6 +581,7 @@ function renderEstadisticas() {
 }
 
 function mostrarEstadisticas() {
+    pausarTimer();
     renderEstadisticas();
     document.getElementById('statsBackdrop').style.display = '';
     document.getElementById('modalStats').style.display    = '';
@@ -563,6 +590,7 @@ function mostrarEstadisticas() {
 function cerrarEstadisticas() {
     document.getElementById('statsBackdrop').style.display = 'none';
     document.getElementById('modalStats').style.display    = 'none';
+    reanudarTimer();
 }
 
 function resetEstadisticas() {
@@ -573,12 +601,62 @@ function resetEstadisticas() {
 
 // ── Ayuda ──────────────────────────────────────────────
 function mostrarAyuda() {
+    pausarTimer();
     document.getElementById('ayudaBackdrop').style.display = '';
     document.getElementById('modalAyuda').style.display    = '';
 }
 function cerrarAyuda() {
     document.getElementById('ayudaBackdrop').style.display = 'none';
     document.getElementById('modalAyuda').style.display    = 'none';
+    reanudarTimer();
+}
+
+// ── Toast ──────────────────────────────────────────────
+let toastTimeout = null;
+
+function mostrarToast(mensaje, ms) {
+    const el = document.getElementById('toast');
+    el.textContent = mensaje;
+    el.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => el.classList.remove('visible'), ms || 2000);
+}
+
+// ── Ciclo de vida Android ──────────────────────────────
+// Sin manejar "backbutton", Cordova cierra la app al pulsar atras, incluso con
+// un modal abierto. Sin "pause"/"resume" el temporizador sigue contando con la
+// app en segundo plano (KeepRunning es true por defecto).
+function cerrarModalAbierto() {
+    const visible = (id) => document.getElementById(id).style.display !== 'none';
+
+    if (visible('modalAyuda'))   { cerrarAyuda();         return true; }
+    if (visible('modalStats'))   { cerrarEstadisticas();  return true; }
+    if (visible('modalPartida')) { aceptarModal();        return true; }
+    if (visible('modalTorneo'))  { aceptarModalTorneo();  return true; }
+    return false;
+}
+
+function onBackButton() {
+    if (cerrarModalAbierto()) return;
+
+    // Doble pulsacion para salir, para no perder la partida por un roce.
+    if (Estado.salidaPendiente) {
+        if (navigator.app && navigator.app.exitApp) navigator.app.exitApp();
+        return;
+    }
+    Estado.salidaPendiente = true;
+    mostrarToast(t('pulsaAtrasSalir'));
+    setTimeout(() => { Estado.salidaPendiente = false; }, 2000);
+}
+
+function onAppPause() {
+    Estado.appEnPausa = true;
+    pausarTimer();
+}
+
+function onAppResume() {
+    Estado.appEnPausa = false;
+    reanudarTimer();
 }
 
 // ── Vincular eventos ───────────────────────────────────
@@ -611,6 +689,18 @@ function bindEvents() {
     document.getElementById('btnResetStats').addEventListener('click', resetEstadisticas);
     document.getElementById('selTiempoLimite').addEventListener('change', e => onTiempoLimiteChange(e.target.value));
     document.getElementById('selBestOf').addEventListener('change', e => onBestOfChange(e.target.value));
+
+    // Ciclo de vida. "backbutton", "pause" y "resume" solo los emite Cordova
+    // (en el navegador nunca disparan), pero se registran aqui para que ambos
+    // arranques compartan el mismo cableado. "visibilitychange" cubre el caso
+    // equivalente en navegador.
+    document.addEventListener('backbutton', onBackButton, false);
+    document.addEventListener('pause', onAppPause, false);
+    document.addEventListener('resume', onAppResume, false);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) onAppPause();
+        else                 onAppResume();
+    });
 }
 
 // ── Arranque ───────────────────────────────────────────

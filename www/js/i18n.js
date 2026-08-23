@@ -58,7 +58,8 @@ const TRADUCCIONES = {
         ayudaTemporizadorTitulo: 'Temporizador',
         ayudaTemporizadorTexto: 'Activa el reloj con el botón del reloj. Cuando el tiempo se agota, se coloca una ficha aleatoria. Elige entre 10, 15 o 30 segundos.',
         ayudaTorneoTitulo: 'Modo torneo',
-        ayudaTorneoTexto: 'Juega al mejor de 3 o 5 partidas; gana quien antes alcance la mayoría de victorias.'
+        ayudaTorneoTexto: 'Juega al mejor de 3 o 5 partidas; gana quien antes alcance la mayoría de victorias.',
+        pulsaAtrasSalir: 'Pulsa atrás otra vez para salir'
     },
     en: {
         tituloApp: 'Tic-Tac-Toe',
@@ -112,7 +113,8 @@ const TRADUCCIONES = {
         ayudaTemporizadorTitulo: 'Timer',
         ayudaTemporizadorTexto: 'Turn on the clock with the clock button. When time runs out, a random cell is played. Choose 10, 15 or 30 seconds.',
         ayudaTorneoTitulo: 'Tournament mode',
-        ayudaTorneoTexto: 'Play best of 3 or 5 games; whoever reaches the majority of wins first takes the tournament.'
+        ayudaTorneoTexto: 'Play best of 3 or 5 games; whoever reaches the majority of wins first takes the tournament.',
+        pulsaAtrasSalir: 'Press back again to exit'
     }
 };
 
