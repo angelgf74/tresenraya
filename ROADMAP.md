@@ -1,0 +1,134 @@
+# Roadmap de mejoras
+
+Lista de mejoras identificadas, priorizada por impacto/esfuerzo. Marcar `[x]` al implementar.
+
+---
+
+# Ronda 1 — revisión inicial (13/14 completados)
+
+## P0 — Seguridad (hacer primero)
+- [x] `config.xml`: `<access origin="*" />` y `allow-intent href="http://*/*"` demasiado abiertos — restringido a orígenes reales (jsdelivr, cdnjs, fontawesome, gstatic) + solo `https` en allow-intent
+- [x] Separación IDs AdMob test/producción — `hooks/inject-build-config.js` (before_compile) genera `js/build-config.js` con `APP_DEBUG` según `--release`; `app.js` usa `isTesting: !!window.APP_DEBUG`
+
+## P1 — Alto impacto, bajo esfuerzo
+- [x] `localStorage` sin try/catch general en `cargarPrefs()` — envuelto en try/catch, más `guardarPref()` que protege también los `setItem`
+- [x] `LINEAS` duplicado en `Tablero._evaluar()` y `Tablero.lineaGanadora()` — sacado a constante de módulo en `game.js`
+- [x] Accesibilidad: celdas ahora `role="button"`, `tabindex`, `aria-label` dinámico (vacía/X/O), `aria-disabled`, soporte Enter/Espacio
+- [x] Botón de reinicio de marcador manual (`btnResetMarcador`) junto al marcador, sin togglear jugador
+
+## P2 — Valor medio, más esfuerzo
+- [x] Estadísticas persistentes — `Estado.estadisticas` `{jugadas, victoriasX, victoriasO, tablas}` guardado en `localStorage('Estadisticas')`, nuevo botón/modal `btnStats` con % victorias y botón de borrado
+- [ ] Automatizar chequeo de versionCode contra track Play antes de compilar — pospuesto (necesita cuenta de servicio de Play Developer API; decisión pendiente del usuario)
+- [x] Estado global disperso en `app.js` — migrado a objeto único `const Estado = {...}`, todas las referencias actualizadas y probadas
+
+## P3 — Bajo impacto / oportunista
+- [x] `game.js`: poda alpha-beta añadida en `Juego.mejorJugada`/`_minimax` — verificado con autojuego (perfecta vs perfecta 20/20 tablas, perfecta nunca pierde) que el resultado no cambia, solo menos nodos
+- [x] Tuning de dificultad — se encontró que "Medio" (profundidad 4) perdía más partidas (4/9 aperturas) que "Fácil" (profundidad 2, 2/9) contra rival perfecto, bug preexistente no introducido por la poda. Cambiado Medio a profundidad 3 (empata tasa de derrota con Fácil, ya no es peor) en `index.html` (select + texto ayuda) y `app.js` (`Estado.nivel` por defecto)
+- [x] i18n — nuevo `js/i18n.js` con diccionario es/en y `t()`/`aplicarIdioma()`; atributos `data-i18n`/`data-i18n-title`/`data-i18n-aria` en `index.html`; strings dinámicos de `app.js` (aria-label de celdas, modal de resultado, estadísticas) migrados a `t()`; botón `btnIdioma` en extras-row, persistido en `localStorage('Idioma')`. Probado en navegador: cambio ES↔EN, ayuda completa, partida y stats en inglés, persiste tras recargar
+- [x] `deploy-release.ps1` / build: `hooks/copy-android-config.js` ahora también fuerza `org.gradle.caching=true` y `org.gradle.parallel=true` en `gradle.properties` (que Cordova regenera en cada `platform add/rm`); el caché de Gradle vive en `~/.gradle/caches`, fuera de `platforms/`, así que sobrevive y acelera builds sucesivos. La detección de JDK/Gradle/SDK en sí ya era rápida (unos `Test-Path`), no hacía falta cachearla
+
+---
+
+# Ronda 2 — revisión ampliada
+
+Segunda pasada sobre zonas no cubiertas en la ronda 1 (`sounds.js`, `index.js`, CSS completo,
+`package.json`, `.gitignore`, `android-config/`, ciclo de vida Cordova). Los ítems marcados
+**[verificado]** se comprobaron ejecutando la app en el navegador, no solo leyendo el código.
+
+## R2-P0 — Bugs de comportamiento (usuario los sufre hoy)
+
+- [ ] **Indicador de turno invertido** [verificado] — `renderJugadores()` en `app.js` calcula
+      `conTurno = tablero.turno === (idx === 0 ? 2 : 1)`, que resalta al jugador que NO tiene el
+      turno. Comprobado en navegador: con `turno === 1` (le toca a X, que es `jug1`) se ilumina
+      `jug2`; tras jugar X (`turno === 2`) se ilumina `jug1`. El HTML inicial arrastra la misma
+      inversión, por eso pasa desapercibido al arrancar. Arreglo: `(idx === 0 ? 1 : 2)` y ajustar
+      las clases iniciales de `jug1`/`jug2` en `index.html`
+- [ ] **El temporizador sigue corriendo con un modal abierto** [verificado] — abrir Ayuda o
+      Estadísticas con el timer activo no lo pausa (medido: 15 s → 13 s en 2 s con el modal
+      abierto). El usuario puede perder el turno por una jugada aleatoria mientras lee la ayuda.
+      Arreglo: pausar en `mostrarAyuda()`/`mostrarEstadisticas()` y reanudar al cerrar
+- [ ] **Botón atrás de Android sin manejar** [verificado: no hay listener `backbutton`] — con un
+      modal abierto, atrás cierra la app en vez de cerrar el modal; en el juego, sale sin
+      confirmación. Añadir listener `backbutton`: cerrar modal si hay uno, si no confirmar salida
+- [ ] **Sin `pause`/`resume`, con `KeepRunning` por defecto (true)** — el `setInterval` del
+      temporizador sigue contando con la app en segundo plano; al volver, el turno puede estar ya
+      perdido. Manejar `pause`/`resume` (o `visibilitychange`) para congelar y restaurar el timer
+
+## R2-P1 — Accesibilidad (completar lo que la ronda 1 dejó a medias)
+
+La ronda 1 solo cubrió las celdas del tablero. El resto de controles siguen sin cubrir.
+
+- [ ] **Controles de icono inalcanzables por teclado** [verificado] — `btnTema`, `btnAyuda`,
+      `btnVolumen`, `jug1` y `jug2` son elementos `<i>` con `onclick`: sin `tabindex`, sin `role`,
+      sin `aria-label`, y `document.activeElement` no los alcanza. Convertir a `<button>` (o
+      replicar el patrón aplicado a las celdas)
+- [ ] **Sin estilo de foco visible** [verificado: no hay ninguna regla `:focus`/`:focus-visible`
+      en `app.css`] — además `outline: none` en `#txtNivel` (línea ~210) y `.config-select`
+      (línea ~372) quita el anillo de los controles nativos. Definir `:focus-visible` explícito
+      (WCAG 2.4.7)
+- [ ] **Estructura ARIA del tablero inválida** — `#tableroGrid` tiene `role="grid"` pero sus hijos
+      son `role="button"`; un `grid` requiere `row`/`gridcell`. Elegir una: quitar `role="grid"`
+      del contenedor, o pasar a `gridcell` + navegación con flechas
+- [ ] **Slider de volumen sin nombre accesible** [verificado] — `#volSlider` no tiene `<label>` ni
+      `aria-label`; un lector de pantalla solo anuncia "slider"
+- [ ] **Modales sin gestión de foco** [verificado: Escape no cierra] — no hay trampa de foco, el
+      foco no se mueve al abrir ni se restaura al cerrar, y el fondo sigue siendo tabulable
+- [ ] **Sin `prefers-reduced-motion`** — animación de línea ganadora y pulso de los puntos de
+      "Pensando" se reproducen siempre
+
+## R2-P2 — Infraestructura del proyecto
+
+- [ ] **El proyecto no está bajo control de versiones** [verificado: existe `.gitignore` pero no
+      hay `.git`] — app publicada en Play sin historial, sin poder revertir ni comparar releases.
+      El `.gitignore` ya está bien escrito (excluye `build.json` y `release-signing.properties`,
+      que contienen contraseñas de firma en claro), así que `git init` + commit inicial es seguro.
+      **Mayor retorno por esfuerzo de toda la lista**
+- [ ] **Sin tests** — `npm test` es el placeholder que falla de la plantilla. `Tablero` y `Juego`
+      son puros y triviales de testear; el bug de dificultad de la ronda 1 (profundidad 4 peor que
+      la 2) habría saltado con un test de autojuego. Empezar por: reglas de victoria/tablas,
+      `lineaGanadora()`, y que la IA a profundidad 9 nunca pierda
+- [ ] **Sin linter** — no hay configuración de ESLint; el proyecto usa globales implícitas entre
+      ficheros (`Estado`, `t`, `playSound`), justo lo que un linter con `globals` declaradas
+      detectaría antes de un fallo en tiempo de ejecución
+
+## R2-P3 — Limpieza y robustez
+
+- [ ] **Restos de la plantilla Cordova empaquetados en el APK** [verificado: no referenciados] —
+      `www/js/index.js` (busca un `#deviceready` que ya no existe en el HTML), `www/css/index.css`
+      y `www/img/logo.png` (~26 KB). `shrinkResources` no toca `assets/www/`, así que viajan en el
+      release. Borrar los tres
+- [ ] **Metadatos de `package.json` sin personalizar** — `description` sigue siendo "A sample
+      Apache Cordova application that responds to the deviceready event", `author` es "Apache
+      Cordova Team", `main` apunta a `index.js` (el fichero muerto de arriba) y `version` es
+      `1.0.0` mientras `config.xml` va por `1.0.24`
+- [ ] **`admob.interstitial.show()` sin comprobación ni captura de errores** — no se verifica que
+      haya anuncio cargado y no hay `.catch()`, así que un fallo de carga produce una promesa
+      rechazada sin manejar. Además `await mostrarInterstitial()` espera algo que no es una
+      promesa (`mostrarInterstitial` no devuelve nada): el `await` no hace nada
+- [ ] **Hueco del banner aunque el banner no cargue** — `initAdMob()` aplica
+      `paddingBottom: calc(2rem + 60px)` al contenedor sin esperar al evento de carga; si el
+      anuncio nunca aparece, queda un espacio muerto permanente al pie
+- [ ] **Interstitial encima del modal de resultado** — se lanza 400 ms después de abrir el modal
+      de fin de partida, tapándolo. Mejor mostrarlo al aceptar el modal, antes de la nueva partida
+
+## R2-P4 — Remates de i18n (derivados de la ronda 1)
+
+- [ ] **Destello en español antes de traducir** — el script inline del `<head>` precarga el tema
+      para evitar el parpadeo, pero no el idioma; `aplicarIdioma()` no corre hasta `load`/
+      `deviceready`, así que un usuario en inglés ve la interfaz en español un instante
+- [ ] **Ese script inline lee `localStorage` sin `try/catch`** — incoherente con el blindaje que
+      se aplicó en la ronda 1 a `cargarPrefs()`; si `localStorage` lanza, el script del `<head>`
+      revienta
+- [ ] **Sin detección del idioma del dispositivo** — en el primer arranque siempre entra en `es`,
+      aunque el móvil esté en inglés. Usar `navigator.language` como valor inicial
+- [ ] **Ficha de Play y `<name>` de `config.xml` solo en español** — ahora que la app tiene
+      interfaz en inglés, conviene traducir también nombre, descripción y capturas de la ficha
+
+## R2-P5 — Jugabilidad
+
+- [ ] **La IA es completamente determinista** [verificado: 8/8 jugadas idénticas desde la misma
+      posición] — `mejorJugada()` se queda con la primera celda de puntuación máxima, así que la
+      misma partida se repite igual siempre. Elegir al azar entre las jugadas empatadas daría
+      variedad sin tocar la fuerza del motor
+- [ ] **Deshacer de un solo nivel y solo humano vs humano** — guardar una pila de jugadas
+      permitiría deshacer varias y ofrecerlo también contra la IA (retirando las dos últimas)

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="agf.tresenraya" version="1.0.24" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Tres en Raya</name>
+    <description>Juego Tres en Raya con IA minimax y modo multijugador</description>
+    <author email="angelgf@gmail.com" href="https://angelgf.com.es">Angel</author>
+    <content src="index.html" />
+    <allow-intent href="https://*/*" />
+    <access origin="https://cdn.jsdelivr.net" />
+    <access origin="https://cdnjs.cloudflare.com" />
+    <access origin="https://ka-f.fontawesome.com" />
+    <access origin="https://ssl.gstatic.com" />
+    <platform name="android">
+        <hook type="before_build" src="hooks/copy-android-config.js" />
+        <hook type="before_compile" src="hooks/inject-build-config.js" />
+        <preference name="Orientation" value="portrait" />
+        <!-- 21 es el suelo real: play-services-ads 23.6.0, appcompat 1.7.1,
+             webkit 1.14.0 y core-splashscreen 1.0.1 declaran minSdkVersion 21.
+             El 24 anterior era solo el valor por defecto de cordova-android 15. -->
+        <preference name="android-minSdkVersion" value="21" />
+        <preference name="android-targetSdkVersion" value="37" />
+        <preference name="Fullscreen" value="false" />
+        <preference name="StatusBarOverlaysWebView" value="false" />
+        <preference name="StatusBarBackgroundColor" value="#0b9e8e" />
+
+        <!-- Icono de la app: fallback legado (pre-Android 8) + iconos adaptativos, en un solo <icon> por densidad -->
+        <icon density="ldpi" src="res/icon/android/legacy-ldpi.png" background="res/icon/android/background-ldpi.png" foreground="res/icon/android/foreground-ldpi.png" />
+        <icon density="mdpi" src="res/icon/android/legacy-mdpi.png" background="res/icon/android/background-mdpi.png" foreground="res/icon/android/foreground-mdpi.png" />
+        <icon density="hdpi" src="res/icon/android/legacy-hdpi.png" background="res/icon/android/background-hdpi.png" foreground="res/icon/android/foreground-hdpi.png" />
+        <icon density="xhdpi" src="res/icon/android/legacy-xhdpi.png" background="res/icon/android/background-xhdpi.png" foreground="res/icon/android/foreground-xhdpi.png" />
+        <icon density="xxhdpi" src="res/icon/android/legacy-xxhdpi.png" background="res/icon/android/background-xxhdpi.png" foreground="res/icon/android/foreground-xxhdpi.png" />
+        <icon density="xxxhdpi" src="res/icon/android/legacy-xxxhdpi.png" background="res/icon/android/background-xxxhdpi.png" foreground="res/icon/android/foreground-xxxhdpi.png" />
+
+        <!-- Pantalla de carga: icono de la app sobre fondo del gradiente de marca -->
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/splash/android/splash.png" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#0fcfbb" />
+    </platform>
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="BackupWebStorage" value="local" />
+    <preference name="SplashScreenDelay" value="0" />
+    <preference name="AutoHideSplashScreen" value="true" />
+</widget>

@@ -1,0 +1,78 @@
+// ============================================================================
+//  build-extras.gradle  —  Optimizacion de la build de release (R8)
+// ----------------------------------------------------------------------------
+//  Este fichero es la FUENTE DE VERDAD. El hook hooks/copy-android-config.js
+//  lo copia a platforms/android/app/build-extras.gradle antes de cada build,
+//  de modo que sobrevive a "cordova platform rm/add android".
+//
+//  Cordova aplica build-extras.gradle ANTES del bloque android {}, por eso la
+//  configuracion se mete en ext.postBuildExtras, que se ejecuta al final del
+//  app/build.gradle generado por Cordova.
+// ============================================================================
+
+// ─── Version del SDK de anuncios ────────────────────────────────────────────
+// El plugin cordova-admob-sdk declara play-services-ads y play-services-base
+// 11.0.4 (API de 2017) via project.properties, y Cordova los reescribe en
+// app/build.gradle en cada "prepare". Con 11.0.4 la compilacion falla:
+// InterstitialExecutor.java usa com.google.android.gms.ads.interstitial.*,
+// que no existe hasta la 19. Se corrige aqui para no depender de una edicion
+// manual de app/build.gradle, que "cordova prepare" borraria.
+// AdMob.java tambien usa GoogleApiAvailability/ConnectionResult, que viven en
+// play-services-base y NO llegan de forma transitiva desde play-services-ads
+// (este depende de play-services-basement), asi que hay que subir las dos.
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.google.android.gms' &&
+            details.requested.version == '11.0.4') {
+            switch (details.requested.name) {
+                case 'play-services-ads':
+                    details.useVersion '23.6.0'
+                    break
+                case 'play-services-base':
+                    details.useVersion '18.5.0'
+                    break
+            }
+            details.because 'El plugin fija 11.0.4, cuya API ya no compila'
+        }
+    }
+}
+
+ext.postBuildExtras = {
+    android {
+        buildTypes {
+            release {
+                // R8: elimina codigo muerto y ofusca nombres.
+                minifyEnabled true
+
+                // Elimina recursos (res/) no referenciados. Requiere minifyEnabled.
+                shrinkResources true
+
+                // proguard-android-optimize.txt activa las optimizaciones de R8
+                // (la variante sin "-optimize" las desactiva).
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                              'proguard-rules.pro'
+            }
+
+            debug {
+                // La build de debug se deja intacta para no ralentizar el ciclo
+                // de desarrollo ni romper el stacktrace.
+                minifyEnabled false
+                shrinkResources false
+            }
+        }
+
+        // Metadatos que no aportan nada en runtime y solo ocupan sitio en el AAB.
+        packagingOptions {
+            resources {
+                excludes += [
+                    'META-INF/*.version',
+                    'META-INF/*.kotlin_module',
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/proguard/**',
+                    'DebugProbesKt.bin',
+                    'kotlin-tooling-metadata.json'
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 400px; height: 400px; background: #0b9e8e; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<svg width="288" height="288" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo teal con gradiente diagonal -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0fcfbb"/>
+      <stop offset="100%" style="stop-color:#076b60"/>
+    </linearGradient>
+    <filter id="glowX"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="rgba(255,82,82,0.7)"/></filter>
+    <filter id="glowO"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="rgba(255,255,255,0.6)"/></filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Grid: líneas verticales -->
+  <line x1="192" y1="110" x2="192" y2="402" stroke="rgba(255,255,255,0.85)" stroke-width="10" stroke-linecap="round"/>
+  <line x1="320" y1="110" x2="320" y2="402" stroke="rgba(255,255,255,0.85)" stroke-width="10" stroke-linecap="round"/>
+  <!-- Grid: líneas horizontales -->
+  <line x1="110" y1="208" x2="402" y2="208" stroke="rgba(255,255,255,0.85)" stroke-width="10" stroke-linecap="round"/>
+  <line x1="110" y1="304" x2="402" y2="304" stroke="rgba(255,255,255,0.85)" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- X superior-izquierda -->
+  <g filter="url(#glowX)">
+    <line x1="130" y1="130" x2="172" y2="188" stroke="#ff5252" stroke-width="16" stroke-linecap="round"/>
+    <line x1="172" y1="130" x2="130" y2="188" stroke="#ff5252" stroke-width="16" stroke-linecap="round"/>
+  </g>
+
+  <!-- O central r=34 -->
+  <g filter="url(#glowO)">
+    <circle cx="256" cy="256" r="34" fill="none" stroke="white" stroke-width="16"/>
+  </g>
+
+  <!-- X inferior-derecha -->
+  <g filter="url(#glowX)">
+    <line x1="340" y1="324" x2="382" y2="382" stroke="#ff5252" stroke-width="16" stroke-linecap="round"/>
+    <line x1="382" y1="324" x2="340" y2="382" stroke="#ff5252" stroke-width="16" stroke-linecap="round"/>
+  </g>
+
+  <!-- O superior-derecha semitransparente -->
+  <circle cx="362" cy="159" r="32" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="13"/>
+
+  <!-- X inferior-izquierda semitransparente -->
+  <line x1="130" y1="324" x2="168" y2="380" stroke="rgba(255,82,82,0.6)" stroke-width="13" stroke-linecap="round"/>
+  <line x1="168" y1="324" x2="130" y2="380" stroke="rgba(255,82,82,0.6)" stroke-width="13" stroke-linecap="round"/>
+</svg>
+</body>
+</html>

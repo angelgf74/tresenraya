@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1024px; height: 500px; overflow: hidden; background: transparent; }
+</style>
+</head>
+<body>
+<svg width="1024" height="500" viewBox="0 0 1024 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a2a28"/>
+      <stop offset="60%" style="stop-color:#0b5e55"/>
+      <stop offset="100%" style="stop-color:#0fcfbb"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#a8f0eb"/>
+    </linearGradient>
+    <filter id="glowX">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(255,82,82,0.9)"/>
+    </filter>
+    <filter id="glowO">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="rgba(255,255,255,0.7)"/>
+    </filter>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="rgba(0,0,0,0.5)"/>
+    </filter>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="1024" height="500" fill="url(#bg)"/>
+
+  <!-- Círculos decorativos de fondo -->
+  <circle cx="820" cy="250" r="320" fill="rgba(15,207,187,0.06)"/>
+  <circle cx="820" cy="250" r="210" fill="rgba(15,207,187,0.07)"/>
+  <circle cx="100" cy="450" r="180" fill="rgba(255,255,255,0.03)"/>
+
+  <!-- ── TABLERO (derecha) ── -->
+  <!-- Líneas verticales -->
+  <line x1="730" y1="80" x2="730" y2="420" stroke="rgba(255,255,255,0.7)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="860" y1="80" x2="860" y2="420" stroke="rgba(255,255,255,0.7)" stroke-width="7" stroke-linecap="round"/>
+  <!-- Líneas horizontales -->
+  <line x1="600" y1="193" x2="990" y2="193" stroke="rgba(255,255,255,0.7)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="600" y1="307" x2="990" y2="307" stroke="rgba(255,255,255,0.7)" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- X celda 0,0 -->
+  <g filter="url(#glowX)">
+    <line x1="622" y1="98" x2="710" y2="175" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+    <line x1="710" y1="98" x2="622" y2="175" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+  </g>
+  <!-- O celda 0,1 -->
+  <g filter="url(#glowO)">
+    <circle cx="795" cy="137" r="40" fill="none" stroke="white" stroke-width="14"/>
+  </g>
+  <!-- X celda 0,2 -->
+  <g filter="url(#glowX)" opacity="0.7">
+    <line x1="878" y1="98" x2="972" y2="175" stroke="#ff5252" stroke-width="11" stroke-linecap="round"/>
+    <line x1="972" y1="98" x2="878" y2="175" stroke="#ff5252" stroke-width="11" stroke-linecap="round"/>
+  </g>
+
+  <!-- O celda 1,0 -->
+  <g filter="url(#glowO)" opacity="0.6">
+    <circle cx="665" cy="250" r="38" fill="none" stroke="white" stroke-width="11"/>
+  </g>
+  <!-- X celda 1,1 -->
+  <g filter="url(#glowX)">
+    <line x1="748" y1="215" x2="842" y2="285" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+    <line x1="842" y1="215" x2="748" y2="285" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+  </g>
+  <!-- O celda 1,2 -->
+  <g filter="url(#glowO)">
+    <circle cx="925" cy="250" r="40" fill="none" stroke="white" stroke-width="14"/>
+  </g>
+
+  <!-- O celda 2,0 -->
+  <g filter="url(#glowO)" opacity="0.6">
+    <circle cx="665" cy="363" r="38" fill="none" stroke="white" stroke-width="11"/>
+  </g>
+  <!-- línea ganadora diagonal X (0,0→1,1→2,2) -->
+  <line x1="630" y1="88" x2="990" y2="420" stroke="rgba(255,82,82,0.6)" stroke-width="6" stroke-linecap="round"/>
+  <!-- X celda 2,1 -->
+  <g filter="url(#glowX)" opacity="0.7">
+    <line x1="748" y1="325" x2="842" y2="400" stroke="#ff5252" stroke-width="11" stroke-linecap="round"/>
+    <line x1="842" y1="325" x2="748" y2="400" stroke="#ff5252" stroke-width="11" stroke-linecap="round"/>
+  </g>
+  <!-- X celda 2,2 -->
+  <g filter="url(#glowX)">
+    <line x1="878" y1="325" x2="972" y2="400" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+    <line x1="972" y1="325" x2="878" y2="400" stroke="#ff5252" stroke-width="14" stroke-linecap="round"/>
+  </g>
+
+  <!-- Separador vertical sutil -->
+  <line x1="555" y1="60" x2="555" y2="440" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- ── TEXTO (izquierda) ── -->
+  <!-- Título -->
+  <text x="60" y="185" font-family="'Arial Black', Arial, sans-serif" font-size="86" font-weight="900"
+        fill="url(#textGrad)" filter="url(#textShadow)" letter-spacing="-2">Tres</text>
+  <text x="60" y="285" font-family="'Arial Black', Arial, sans-serif" font-size="86" font-weight="900"
+        fill="url(#textGrad)" filter="url(#textShadow)" letter-spacing="-2">en Raya</text>
+
+  <!-- Subtítulo -->
+  <text x="64" y="330" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.75)"
+        letter-spacing="1">Con inteligencia artificial · 4 niveles</text>
+
+  <!-- Badges de características -->
+  <rect x="60" y="365" width="120" height="38" rx="19" fill="rgba(255,255,255,0.12)"/>
+  <text x="120" y="390" font-family="Arial, sans-serif" font-size="16" fill="white"
+        text-anchor="middle">🤖 IA minimax</text>
+
+  <rect x="196" y="365" width="110" height="38" rx="19" fill="rgba(255,255,255,0.12)"/>
+  <text x="251" y="390" font-family="Arial, sans-serif" font-size="16" fill="white"
+        text-anchor="middle">🏆 Torneo</text>
+
+  <rect x="322" y="365" width="115" height="38" rx="19" fill="rgba(255,255,255,0.12)"/>
+  <text x="379" y="390" font-family="Arial, sans-serif" font-size="16" fill="white"
+        text-anchor="middle">🌙 Tema oscuro</text>
+</svg>
+</body>
+</html>

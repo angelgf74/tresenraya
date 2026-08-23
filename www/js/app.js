@@ -1,0 +1,633 @@
+// ── Estado global ──────────────────────────────────────
+const Estado = {
+    tablero: new Tablero(),
+    marcador: [0, 0, 0], // [tablas, X, O]
+    nivel: 3,
+    turnoInicial: 1,
+    esperandoIA: false,
+    tipoJugador: [0, 1], // 0=humano, 1=IA
+    tableroAnterior: null,
+    tema: 'claro',
+    volumen: 80,
+    silenciado: false,
+    idioma: 'es',
+
+    // Timer
+    timerActivo: false,
+    tiempoLimite: 15,
+    tiempoRestante: 0,
+    timerInterval: null,
+
+    // Torneo
+    modoTorneo: false,
+    bestOf: 3,
+    ganadorTorneo: 0,
+
+    // AdMob — contador para mostrar interstitial cada 2 partidas
+    partidasJugadas: 0,
+
+    // Estadísticas históricas (persisten entre reinicios de la app)
+    estadisticas: { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0 }
+};
+
+// ── Helpers ────────────────────────────────────────────
+const hayIA       = () => Estado.tipoJugador[0] === 1 || Estado.tipoJugador[1] === 1;
+const esIA        = (jug) => Estado.tipoJugador[jug - 1] === 1;
+const puedeDeshacer = () => !hayIA() && Estado.tableroAnterior !== null && !Estado.tablero.terminado;
+const metaTorneo  = () => Math.ceil(Estado.bestOf / 2);
+const delay       = (ms) => new Promise(r => setTimeout(r, ms));
+
+// ── Persistencia ───────────────────────────────────────
+function cargarPrefs() {
+    try {
+        const t = localStorage.getItem('Tema');
+        if (t) { Estado.tema = t; document.documentElement.setAttribute('data-tema', t); }
+
+        const vol = parseInt(localStorage.getItem('Volumen'));
+        if (!isNaN(vol)) Estado.volumen = vol;
+
+        const sil = localStorage.getItem('Silenciado');
+        if (sil !== null) Estado.silenciado = sil === 'true';
+
+        const idi = localStorage.getItem('Idioma');
+        if (idi === 'es' || idi === 'en') Estado.idioma = idi;
+
+        const n = parseInt(localStorage.getItem('Nivel'));
+        if (!isNaN(n)) Estado.nivel = n;
+
+        const jugs = JSON.parse(localStorage.getItem('Jugadores'));
+        if (Array.isArray(jugs) && jugs.length === 2) Estado.tipoJugador = jugs;
+
+        const est = JSON.parse(localStorage.getItem('Estadisticas'));
+        if (est && typeof est.jugadas === 'number') Estado.estadisticas = est;
+    } catch (e) {
+        // localStorage no disponible (incógnito, cuota, etc.) — se sigue con valores por defecto
+    }
+
+    setSoundVolume(Estado.volumen / 100);
+    setSoundMuted(Estado.silenciado);
+}
+
+function guardarPref(clave, valor) {
+    try { localStorage.setItem(clave, valor); } catch (e) {}
+}
+
+// ── AdMob (cordova-plugin-admob-free) ─────────────────
+const ADMOB_IDS = {
+    banner:       'ca-app-pub-8600791204816041/8820270638',
+    interstitial: 'ca-app-pub-8600791204816041/5219883075'
+};
+
+function initAdMob() {
+    if (typeof admob === 'undefined') return;
+
+    // Banner inferior siempre visible
+    admob.banner.config({
+        id: ADMOB_IDS.banner,
+        isTesting: !!window.APP_DEBUG,
+        autoShow: true,
+        bannerAtTop: false,
+        overlap: true
+    });
+    admob.banner.prepare();
+
+    // Espacio para que el banner no tape el contenido
+    document.querySelector('.game-container').style.paddingBottom = 'calc(2rem + 60px)';
+
+    // Precargar interstitial y recargarlo al cerrarse
+    precargarInterstitial();
+    document.addEventListener('admob.interstitial.events.CLOSE', precargarInterstitial);
+}
+
+function precargarInterstitial() {
+    if (typeof admob === 'undefined') return;
+    admob.interstitial.config({
+        id: ADMOB_IDS.interstitial,
+        isTesting: !!window.APP_DEBUG,
+        autoShow: false
+    });
+    admob.interstitial.prepare();
+}
+
+function mostrarInterstitial() {
+    if (typeof admob === 'undefined') return;
+    admob.interstitial.show();
+}
+
+// ── Renderizado ────────────────────────────────────────
+function renderTodo() {
+    aplicarIdioma();
+    renderTema();
+    renderVolumen();
+    renderJugadores();
+    renderNivel();
+    renderTablero();
+    renderMarcador();
+    renderBajoTablero();
+    renderExtras();
+}
+
+function renderTema() {
+    const btn = document.getElementById('btnTema');
+    btn.className = Estado.tema === 'claro' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+}
+
+function renderVolumen() {
+    document.getElementById('volSlider').value = Estado.volumen;
+    const btn = document.getElementById('btnVolumen');
+    if (Estado.silenciado || Estado.volumen === 0)   btn.className = 'fa-solid fa-volume-xmark';
+    else if (Estado.volumen <= 50)                   btn.className = 'fa-solid fa-volume-low';
+    else                                              btn.className = 'fa-solid fa-volume-high';
+}
+
+function renderJugadores() {
+    for (let idx = 0; idx < 2; idx++) {
+        const el = document.getElementById(`jug${idx + 1}`);
+        const icono = Estado.tipoJugador[idx] === 0 ? 'fa-solid fa-user' : 'fa-brands fa-android';
+        // jug1(idx=0) tiene turno cuando tablero.turno==2; jug2(idx=1) cuando turno==1
+        const conTurno = Estado.tablero.turno === (idx === 0 ? 2 : 1) && !Estado.tablero.terminado;
+        el.className = `${icono} tipojugador ${conTurno ? 'conturno' : 'sinturno'}`;
+
+        const col = document.getElementById(`colJugador${idx + 1}`);
+        col.style.background = conTurno ? 'var(--jugador-activo-bg)' : '';
+    }
+}
+
+function renderNivel() {
+    const sel = document.getElementById('txtNivel');
+    sel.style.display = hayIA() ? '' : 'none';
+    sel.value = Estado.nivel;
+}
+
+function renderTablero() {
+    const celdas = document.querySelectorAll('.celda');
+    celdas.forEach((el, idx) => {
+        const ficha = Estado.tablero.celdas[idx];
+        const bloqueada = Estado.tablero.terminado || Estado.esperandoIA || ficha !== 0 || esIA(Estado.tablero.turno);
+        el.className = `celda${bloqueada ? ' bloqueada' : ''}`;
+        el.setAttribute('aria-disabled', String(bloqueada));
+        el.setAttribute('tabindex', bloqueada ? '-1' : '0');
+        el.setAttribute('aria-label',
+            ficha === 1 ? t('casillaX', { n: idx + 1 }) :
+            ficha === 2 ? t('casillaO', { n: idx + 1 }) :
+            t('casillaVacia', { n: idx + 1 }));
+
+        if (ficha === 1 && !el.querySelector('.fa-times')) {
+            el.innerHTML = '<i class="fa-solid fa-times" aria-hidden="true"></i>';
+        } else if (ficha === 2 && !el.querySelector('.fa-circle')) {
+            el.innerHTML = '<i class="fa-regular fa-circle" aria-hidden="true"></i>';
+        } else if (ficha === 0) {
+            el.innerHTML = '';
+        }
+    });
+
+    renderLineaGanadora();
+}
+
+function renderLineaGanadora() {
+    const svg = document.getElementById('svgLinea');
+    const linea = Estado.tablero.ganador > 0 ? Estado.tablero.lineaGanadora() : null;
+
+    if (!linea) { svg.style.display = 'none'; return; }
+
+    const idx1 = linea[0], idx2 = linea[2];
+    let x1 = idx1 % 3 + 0.5, y1 = Math.floor(idx1 / 3) + 0.5;
+    let x2 = idx2 % 3 + 0.5, y2 = Math.floor(idx2 / 3) + 0.5;
+
+    if (x1 < x2) { x1 -= 1; x2 += 1; }
+    else if (x1 > x2) { x1 += 1; x2 -= 1; }
+    if (y1 < y2) { y1 -= 1; y2 += 1; }
+    else if (y1 > y2) { y1 += 1; y2 -= 1; }
+
+    const el = document.getElementById('lineaEl');
+    el.setAttribute('x1', x1.toFixed(2));
+    el.setAttribute('y1', y1.toFixed(2));
+    el.setAttribute('x2', x2.toFixed(2));
+    el.setAttribute('y2', y2.toFixed(2));
+
+    // Reiniciar animación CSS
+    el.style.animation = 'none';
+    void el.offsetHeight;
+    el.style.animation = '';
+
+    svg.style.display = '';
+}
+
+function renderMarcador() {
+    document.getElementById('marcadorX').textContent = Estado.marcador[1];
+    document.getElementById('marcadorT').textContent = Estado.marcador[0];
+    document.getElementById('marcadorO').textContent = Estado.marcador[2];
+    if (Estado.modoTorneo)
+        document.getElementById('torneoScore').textContent = `X ${Estado.marcador[1]} – ${Estado.marcador[2]} O`;
+}
+
+function renderBajoTablero() {
+    document.getElementById('btnDeshacer').style.display = puedeDeshacer() ? '' : 'none';
+    document.getElementById('elPensando').style.display  = Estado.esperandoIA ? '' : 'none';
+
+    const mostrarTimer = Estado.timerActivo && !Estado.tablero.terminado && !esIA(Estado.tablero.turno) && !Estado.esperandoIA;
+    const timerEl = document.getElementById('elTimer');
+    timerEl.style.display = mostrarTimer ? '' : 'none';
+    if (mostrarTimer) {
+        document.getElementById('timerNum').textContent = Estado.tiempoRestante;
+        timerEl.className = `timer-display${Estado.tiempoRestante <= 5 ? ' timer-urgente' : ''}`;
+    }
+}
+
+function renderExtras() {
+    document.getElementById('btnTimer').className  = `extra-btn${Estado.timerActivo ? ' on' : ''}`;
+    document.getElementById('btnTorneo').className = `extra-btn${Estado.modoTorneo ? ' on' : ''}`;
+
+    const showConfig = Estado.timerActivo || Estado.modoTorneo;
+    document.getElementById('configRow').style.display    = showConfig ? 'flex' : 'none';
+    document.getElementById('configTimer').style.display  = Estado.timerActivo ? '' : 'none';
+    document.getElementById('configTorneo').style.display = Estado.modoTorneo ? '' : 'none';
+}
+
+// ── Inicialización del tablero DOM ─────────────────────
+function crearCeldasDOM() {
+    const grid = document.getElementById('tableroGrid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+        const celda = document.createElement('div');
+        celda.className = 'celda';
+        celda.setAttribute('role', 'button');
+        celda.setAttribute('tabindex', '0');
+        celda.setAttribute('aria-label', t('casillaVacia', { n: i + 1 }));
+        celda.addEventListener('click', () => onCeldaClick(i));
+        celda.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onCeldaClick(i);
+            }
+        });
+        grid.appendChild(celda);
+    }
+}
+
+// ── Lógica del juego ───────────────────────────────────
+async function iniciarJuego() {
+    cancelarTimer();
+    Estado.tablero.reset(Estado.turnoInicial);
+    Estado.tableroAnterior = null;
+    Estado.esperandoIA = false;
+    renderTodo();
+
+    if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
+        await jugadaIA();
+    else if (Estado.timerActivo && !Estado.tablero.terminado)
+        iniciarTimer();
+}
+
+async function nuevoJuego() {
+    Estado.turnoInicial = Estado.turnoInicial === 1 ? 2 : 1;
+    await iniciarJuego();
+}
+
+async function onCeldaClick(celda) {
+    if (Estado.tablero.terminado || Estado.esperandoIA || Estado.tablero.celdas[celda] !== 0 || esIA(Estado.tablero.turno))
+        return;
+
+    cancelarTimer();
+    Estado.tableroAnterior = Estado.tablero.clonar();
+    Estado.tablero.hacerJugada(celda);
+    playSound('colocar');
+    renderTablero();
+    renderJugadores();
+    renderBajoTablero();
+
+    await refrescarEstado();
+
+    if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
+        await jugadaIA();
+    else if (!Estado.tablero.terminado && Estado.timerActivo)
+        iniciarTimer();
+}
+
+async function jugadaIA() {
+    Estado.esperandoIA = true;
+    renderBajoTablero();
+    renderJugadores();
+
+    await delay(380);
+
+    const celda = Juego.mejorJugada(Estado.tablero, Estado.nivel);
+    if (celda >= 0) Estado.tablero.hacerJugada(celda);
+
+    Estado.esperandoIA = false;
+    playSound('colocar');
+    renderTablero();
+    renderJugadores();
+    renderBajoTablero();
+
+    await refrescarEstado();
+
+    if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
+        await jugadaIA();
+    else if (!Estado.tablero.terminado && Estado.timerActivo)
+        iniciarTimer();
+}
+
+async function refrescarEstado() {
+    if (!Estado.tablero.terminado) return;
+
+    cancelarTimer();
+    if (Estado.tablero.ganador === 1)      { Estado.marcador[1]++; Estado.estadisticas.victoriasX++; }
+    else if (Estado.tablero.ganador === 2) { Estado.marcador[2]++; Estado.estadisticas.victoriasO++; }
+    else                                    { Estado.marcador[0]++; Estado.estadisticas.tablas++; }
+    Estado.estadisticas.jugadas++;
+    guardarPref('Estadisticas', JSON.stringify(Estado.estadisticas));
+
+    renderMarcador();
+    renderLineaGanadora();
+    playSound(Estado.tablero.ganador > 0 ? 'victoria' : 'empate');
+
+    await delay(1600);
+
+    if (Estado.modoTorneo && (Estado.marcador[1] >= metaTorneo() || Estado.marcador[2] >= metaTorneo())) {
+        Estado.ganadorTorneo = Estado.marcador[1] >= metaTorneo() ? 1 : 2;
+        abrirModalTorneo();
+    } else {
+        abrirModalPartida();
+    }
+
+    // Interstitial cada 2 partidas terminadas
+    Estado.partidasJugadas++;
+    if (Estado.partidasJugadas % 2 === 0) {
+        await delay(400);
+        await mostrarInterstitial();
+    }
+}
+
+// ── Modales ────────────────────────────────────────────
+function abrirModalPartida() {
+    let html;
+    if (Estado.tablero.ganador === -1) {
+        html = `<div class="modal-resultado"><b>${t('tablas')}</b>
+            <span class="fa-stack fa-2x">
+                <i class="far fa-circle fa-stack-2x"></i>
+                <i class="fas fa-times fa-stack-1x"></i>
+            </span></div>`;
+    } else {
+        const ficha = Estado.tablero.ganador === 1
+            ? `<i class="fas fa-times fa-3x"></i>`
+            : `<i class="far fa-circle fa-3x"></i>`;
+        html = `<div class="modal-resultado"><b>${t('ganador')}</b>${ficha}</div>`;
+    }
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalBackdrop').style.display = '';
+    document.getElementById('modalPartida').style.display  = '';
+}
+
+function abrirModalTorneo() {
+    document.getElementById('iconoCampeon').innerHTML = Estado.ganadorTorneo === 1
+        ? `<i class="fas fa-times fa-3x"></i>`
+        : `<i class="far fa-circle fa-3x"></i>`;
+    document.getElementById('marcadorTorneo').textContent = `${Estado.marcador[1]} – ${Estado.marcador[2]}`;
+    document.getElementById('modalTorneoBackdrop').style.display = '';
+    document.getElementById('modalTorneo').style.display         = '';
+}
+
+async function aceptarModal() {
+    document.getElementById('modalBackdrop').style.display = 'none';
+    document.getElementById('modalPartida').style.display  = 'none';
+    await delay(600);
+    await nuevoJuego();
+}
+
+async function aceptarModalTorneo() {
+    document.getElementById('modalTorneoBackdrop').style.display = 'none';
+    document.getElementById('modalTorneo').style.display         = 'none';
+    Estado.marcador = [0, 0, 0];
+    Estado.turnoInicial = 1;
+    await delay(600);
+    await iniciarJuego();
+}
+
+// ── Controles UI ───────────────────────────────────────
+function toggleTema() {
+    Estado.tema = Estado.tema === 'claro' ? 'oscuro' : 'claro';
+    document.documentElement.setAttribute('data-tema', Estado.tema);
+    guardarPref('Tema', Estado.tema);
+    renderTema();
+}
+
+function toggleIdioma() {
+    Estado.idioma = Estado.idioma === 'es' ? 'en' : 'es';
+    guardarPref('Idioma', Estado.idioma);
+    renderTodo();
+}
+
+function toggleMute() {
+    Estado.silenciado = !Estado.silenciado;
+    setSoundMuted(Estado.silenciado);
+    guardarPref('Silenciado', Estado.silenciado);
+    renderVolumen();
+}
+
+function onVolumenInput(val) {
+    Estado.volumen = parseInt(val);
+    if (Estado.silenciado && Estado.volumen > 0) Estado.silenciado = false;
+    setSoundVolume(Estado.volumen / 100);
+    setSoundMuted(Estado.silenciado);
+    guardarPref('Volumen', Estado.volumen);
+    guardarPref('Silenciado', Estado.silenciado);
+    renderVolumen();
+}
+
+async function toggleTipo(idx) {
+    if (Estado.tipoJugador[idx] === 0 && Estado.tipoJugador[1 - idx] === 1) return; // mínimo 1 humano
+    Estado.tipoJugador[idx] = 1 - Estado.tipoJugador[idx];
+    Estado.marcador = [0, 0, 0];
+    Estado.modoTorneo = false;
+    guardarPref('Jugadores', JSON.stringify(Estado.tipoJugador));
+    Estado.turnoInicial = 1;
+    renderMarcador();
+    renderExtras();
+    await iniciarJuego();
+}
+
+async function onNivelChange(val) {
+    Estado.nivel = parseInt(val);
+    guardarPref('Nivel', Estado.nivel);
+    Estado.marcador = [0, 0, 0];
+    Estado.modoTorneo = false;
+    Estado.turnoInicial = 1;
+    renderMarcador();
+    renderExtras();
+    await iniciarJuego();
+}
+
+function resetMarcador() {
+    Estado.marcador = [0, 0, 0];
+    renderMarcador();
+}
+
+async function deshacerJugada() {
+    if (!puedeDeshacer()) return;
+    cancelarTimer();
+    Estado.tablero = Estado.tableroAnterior;
+    Estado.tableroAnterior = null;
+    renderTodo();
+    if (Estado.timerActivo) iniciarTimer();
+}
+
+// ── Timer ──────────────────────────────────────────────
+function iniciarTimer() {
+    cancelarTimer();
+    if (!Estado.timerActivo || Estado.tablero.terminado || esIA(Estado.tablero.turno) || Estado.esperandoIA) return;
+    Estado.tiempoRestante = Estado.tiempoLimite;
+    renderBajoTablero();
+
+    Estado.timerInterval = setInterval(async () => {
+        Estado.tiempoRestante--;
+        renderBajoTablero();
+        if (Estado.tiempoRestante <= 0) {
+            cancelarTimer();
+            await tiempoAgotado();
+        }
+    }, 1000);
+}
+
+function cancelarTimer() {
+    if (Estado.timerInterval) { clearInterval(Estado.timerInterval); Estado.timerInterval = null; }
+}
+
+async function tiempoAgotado() {
+    if (Estado.tablero.terminado || esIA(Estado.tablero.turno)) return;
+    const libres = Estado.tablero.celdasLibres();
+    if (libres.length === 0) return;
+    Estado.tableroAnterior = Estado.tablero.clonar();
+    Estado.tablero.hacerJugada(libres[Math.floor(Math.random() * libres.length)]);
+    playSound('colocar');
+    renderTablero();
+    renderJugadores();
+    await refrescarEstado();
+    if (!Estado.tablero.terminado && esIA(Estado.tablero.turno)) await jugadaIA();
+    else if (!Estado.tablero.terminado && Estado.timerActivo) iniciarTimer();
+}
+
+async function toggleTimer() {
+    Estado.timerActivo = !Estado.timerActivo;
+    renderExtras();
+    if (Estado.timerActivo && !Estado.tablero.terminado && !esIA(Estado.tablero.turno) && !Estado.esperandoIA)
+        iniciarTimer();
+    else {
+        cancelarTimer();
+        renderBajoTablero();
+    }
+}
+
+function onTiempoLimiteChange(val) {
+    Estado.tiempoLimite = parseInt(val);
+    if (Estado.timerActivo && !Estado.tablero.terminado && !esIA(Estado.tablero.turno) && !Estado.esperandoIA) {
+        cancelarTimer();
+        iniciarTimer();
+    }
+}
+
+// ── Torneo ─────────────────────────────────────────────
+async function toggleTorneo() {
+    Estado.modoTorneo = !Estado.modoTorneo;
+    if (Estado.modoTorneo) { Estado.marcador = [0, 0, 0]; Estado.turnoInicial = 1; renderMarcador(); }
+    renderExtras();
+    if (Estado.modoTorneo) await iniciarJuego();
+}
+
+function onBestOfChange(val) {
+    Estado.bestOf = parseInt(val);
+    if (Estado.modoTorneo && (Estado.marcador[1] >= metaTorneo() || Estado.marcador[2] >= metaTorneo())) {
+        Estado.marcador = [0, 0, 0];
+        Estado.turnoInicial = 1;
+        iniciarJuego();
+    }
+}
+
+// ── Estadísticas ───────────────────────────────────────
+function renderEstadisticas() {
+    const j = Estado.estadisticas.jugadas;
+    const pct = (n) => j === 0 ? '0%' : `${Math.round(n / j * 100)}%`;
+    document.getElementById('statsBody').innerHTML = `
+        <div class="stats-total">${t('partidasJugadas')}: <b>${j}</b></div>
+        <div class="stats-linea"><i class="fas fa-times ayuda-x"></i> ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
+        <div class="stats-linea"><i class="far fa-circle ayuda-o"></i> ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
+        <div class="stats-linea">${t('tablasStats')}: <b>${Estado.estadisticas.tablas}</b> (${pct(Estado.estadisticas.tablas)})</div>`;
+}
+
+function mostrarEstadisticas() {
+    renderEstadisticas();
+    document.getElementById('statsBackdrop').style.display = '';
+    document.getElementById('modalStats').style.display    = '';
+}
+
+function cerrarEstadisticas() {
+    document.getElementById('statsBackdrop').style.display = 'none';
+    document.getElementById('modalStats').style.display    = 'none';
+}
+
+function resetEstadisticas() {
+    Estado.estadisticas = { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0 };
+    guardarPref('Estadisticas', JSON.stringify(Estado.estadisticas));
+    renderEstadisticas();
+}
+
+// ── Ayuda ──────────────────────────────────────────────
+function mostrarAyuda() {
+    document.getElementById('ayudaBackdrop').style.display = '';
+    document.getElementById('modalAyuda').style.display    = '';
+}
+function cerrarAyuda() {
+    document.getElementById('ayudaBackdrop').style.display = 'none';
+    document.getElementById('modalAyuda').style.display    = 'none';
+}
+
+// ── Vincular eventos ───────────────────────────────────
+function bindEvents() {
+    document.getElementById('btnTema').addEventListener('click', toggleTema);
+    document.getElementById('btnIdioma').addEventListener('click', toggleIdioma);
+    document.getElementById('btnAyuda').addEventListener('click', mostrarAyuda);
+    document.getElementById('btnCerrarAyuda').addEventListener('click', cerrarAyuda);
+    document.getElementById('ayudaBackdrop').addEventListener('click', cerrarAyuda);
+
+    document.getElementById('btnVolumen').addEventListener('click', toggleMute);
+    document.getElementById('volSlider').addEventListener('input', e => onVolumenInput(e.target.value));
+
+    document.getElementById('btnResetMarcador').addEventListener('click', resetMarcador);
+
+    document.getElementById('jug1').addEventListener('click', () => toggleTipo(0));
+    document.getElementById('jug2').addEventListener('click', () => toggleTipo(1));
+
+    document.getElementById('txtNivel').addEventListener('change', e => onNivelChange(e.target.value));
+    document.getElementById('btnDeshacer').addEventListener('click', deshacerJugada);
+
+    document.getElementById('btnAceptarModal').addEventListener('click', aceptarModal);
+    document.getElementById('btnNuevoTorneo').addEventListener('click', aceptarModalTorneo);
+
+    document.getElementById('btnTimer').addEventListener('click', toggleTimer);
+    document.getElementById('btnTorneo').addEventListener('click', toggleTorneo);
+    document.getElementById('btnStats').addEventListener('click', mostrarEstadisticas);
+    document.getElementById('btnCerrarStats').addEventListener('click', cerrarEstadisticas);
+    document.getElementById('statsBackdrop').addEventListener('click', cerrarEstadisticas);
+    document.getElementById('btnResetStats').addEventListener('click', resetEstadisticas);
+    document.getElementById('selTiempoLimite').addEventListener('change', e => onTiempoLimiteChange(e.target.value));
+    document.getElementById('selBestOf').addEventListener('change', e => onBestOfChange(e.target.value));
+}
+
+// ── Arranque ───────────────────────────────────────────
+document.addEventListener('deviceready', async () => {
+    cargarPrefs();
+    crearCeldasDOM();
+    bindEvents();
+    await iniciarJuego();
+    initAdMob();
+}, false);
+
+// Fallback para pruebas en navegador de escritorio
+if (!window.cordova) {
+    window.addEventListener('load', async () => {
+        cargarPrefs();
+        crearCeldasDOM();
+        bindEvents();
+        await iniciarJuego();
+    });
+}
