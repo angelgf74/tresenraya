@@ -87,18 +87,33 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
 
 ## R2-P2 — Infraestructura del proyecto
 
-- [ ] **El proyecto no está bajo control de versiones** [verificado: existe `.gitignore` pero no
-      hay `.git`] — app publicada en Play sin historial, sin poder revertir ni comparar releases.
-      El `.gitignore` ya está bien escrito (excluye `build.json` y `release-signing.properties`,
-      que contienen contraseñas de firma en claro), así que `git init` + commit inicial es seguro.
-      **Mayor retorno por esfuerzo de toda la lista**
-- [ ] **Sin tests** — `npm test` es el placeholder que falla de la plantilla. `Tablero` y `Juego`
-      son puros y triviales de testear; el bug de dificultad de la ronda 1 (profundidad 4 peor que
-      la 2) habría saltado con un test de autojuego. Empezar por: reglas de victoria/tablas,
-      `lineaGanadora()`, y que la IA a profundidad 9 nunca pierda
-- [ ] **Sin linter** — no hay configuración de ESLint; el proyecto usa globales implícitas entre
-      ficheros (`Estado`, `t`, `playSound`), justo lo que un linter con `globals` declaradas
-      detectaría antes de un fallo en tiempo de ejecución
+- [x] **El proyecto no está bajo control de versiones** — `git init` + commit base con 51
+      ficheros. Antes de comitear se comprobó que `build.json` y `release-signing.properties`
+      (contraseñas de firma en claro) quedan fuera por `.gitignore`, que `upload_certificate.pem`
+      es un `BEGIN CERTIFICATE` sin clave privada, y que la única coincidencia de "password" en el
+      contenido es el texto de ejemplo de la ayuda de `deploy-release.ps1`. Se añadió `.idea/` al
+      `.gitignore` (caché autogenerada de Android Studio). Cada bloque de trabajo va en su rama y
+      se fusiona a `master`
+- [x] **Sin tests** — 18 tests con el runner integrado de Node (`node:test`), **cero dependencias
+      nuevas**, en `test/`: 10 de `Tablero` (turnos, jugadas inválidas, las 8 líneas ganadoras para
+      ambos jugadores, tablas, `lineaGanadora`, copia profunda de `clonar`, `reset`) y 8 de la IA
+      (remate, bloqueo, perfecta contra perfecta siempre en tablas, la perfecta no pierde nunca
+      desde ninguna apertura). `npm test` ya funciona.
+      Incluye la **regresión del bug de dificultad de la ronda 1**: comprueba que ningún nivel
+      pierde más partidas que el inferior contra juego perfecto. Validado que el test falla si se
+      devuelve "Medio" a profundidad 4 (4 derrotas/9 frente a las 2/9 de "Fácil").
+      `test/helpers/cargar-juego.js` carga `game.js` con `new Function` y no con `vm`: un contexto
+      de VM es otro realm y los arrays tendrían otro `Array.prototype`, con lo que
+      `deepStrictEqual` fallaría con contenidos idénticos
+- [x] **Sin linter** — ESLint 10 con configuración plana en `eslint.config.js` y script
+      `npm run lint`. Declara qué global aporta cada fichero (`Tablero`/`Juego`/`LINEAS` de
+      `game.js`, `t`/`aplicarIdioma` de `i18n.js`, `Estado` de `app.js`, `playSound` de
+      `sounds.js`, `APP_DEBUG` del hook) para que `no-undef` detecte referencias inexistentes;
+      `no-redeclare` con `builtinGlobals: false` para que el fichero que define una global no se
+      denuncie a sí mismo. Bloques aparte para hooks y tests (CommonJS). Sale limpio, y
+      comprobado que caza el fallo que motivó la regla: dos nombres de función mal escritos se
+      reportan como `no-undef`. La instalación se hizo tras un `--dry-run` que confirmó que solo
+      añadía paquetes; verificado después que `plugins/` y `platforms/` quedaron intactos
 
 ## R2-P3 — Limpieza y robustez
 
