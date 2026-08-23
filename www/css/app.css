@@ -87,6 +87,20 @@ h1.burning {
     line-height: 1.1;
 }
 
+/* Botones que solo contienen un icono: se despojan de la apariencia nativa
+   pero siguen siendo <button>, para que teclado y lectores de pantalla los
+   alcancen. */
+.btn-icono {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}
+
 #btnTema {
     position: absolute;
     left: 0;
@@ -94,7 +108,6 @@ h1.burning {
     transform: translateY(-50%);
     font-size: 1.2rem;
     color: rgba(255,255,255,.6);
-    cursor: pointer;
     padding: 0.5rem;
     transition: color .2s;
 }
@@ -107,11 +120,25 @@ h1.burning {
     transform: translateY(-50%);
     font-size: 1.4rem;
     color: rgba(255,255,255,.6);
-    cursor: pointer;
     padding: 0.5rem;
     transition: color .2s;
 }
 #btnAyuda:active { color: #fff; }
+
+/* ── Foco visible (WCAG 2.4.7) ──
+   Solo :focus-visible, asi el anillo aparece navegando con teclado pero no
+   al tocar la pantalla. */
+:focus-visible {
+    outline: 3px solid #ffd54f;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+/* Las celdas son claras u oscuras segun el tema; el ambar no contrasta sobre
+   blanco, asi que usan el turquesa de marca por dentro del borde. */
+.celda:focus-visible {
+    outline: 3px solid #17c9b4;
+    outline-offset: -4px;
+}
 
 /* ── Fichas (colores globales) ── */
 .fa-times  { color: #e74c3c; }
@@ -136,7 +163,7 @@ h1.burning {
     opacity: 0.7;
 }
 
-.vol-row i {
+.vol-row #btnVolumen {
     font-size: 1rem;
     cursor: pointer;
     color: #fff;
@@ -144,6 +171,7 @@ h1.burning {
     text-align: center;
     flex-shrink: 0;
     padding: 0.3rem;
+    box-sizing: content-box;
 }
 
 .vol-slider {
@@ -179,6 +207,11 @@ h1.burning {
     cursor: pointer;
     line-height: 1;
     padding: 0.3rem;
+    /* Es un <button>: se le quita la apariencia nativa, pero el icono interior
+       hereda de aqui el color de .conturno / .sinturno. */
+    background: none;
+    border: none;
+    font-family: inherit;
 }
 
 .conturno {
@@ -207,7 +240,6 @@ h1.burning {
     border: 1px solid var(--nivel-border);
     background: var(--nivel-bg);
     color: #fff;
-    outline: none;
     cursor: pointer;
 }
 #txtNivel option { color: #333; background: #fff; }
@@ -369,7 +401,6 @@ h1.burning {
     padding: 0.15rem 0.4rem;
     font-size: 0.82rem;
     cursor: pointer;
-    outline: none;
 }
 .config-select option { color: #333; background: #fff; }
 .torneo-score {
@@ -503,6 +534,21 @@ h1.burning {
     display: flex;
     justify-content: center;
     gap: 0.6rem;
+}
+
+/* ── Movimiento reducido ──
+   Se desactiva animación por animación en vez de con una regla global: un
+   `animation: none` indiscriminado dejaría los puntos de "Pensando" en su
+   fotograma final (opacity 0), es decir, invisibles. */
+@media (prefers-reduced-motion: reduce) {
+    .celda i                        { animation: none; }
+    .linea-ganadora                 { animation: none; stroke-dasharray: none; }
+    .puntos span                    { animation: none; opacity: 1; }
+    .timer-display.timer-urgente    { animation: none; }
+    .modal-custom-content           { animation: none; }
+    .celda:active:not(.bloqueada)   { transform: none; }
+    .celda, #btnTema, #btnAyuda,
+    .extra-btn, .toast              { transition: none; }
 }
 
 /* ── Toast (aviso efímero) ── */

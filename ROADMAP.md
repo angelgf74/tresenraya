@@ -59,27 +59,31 @@ Segunda pasada sobre zonas no cubiertas en la ronda 1 (`sounds.js`, `index.js`, 
 Los tres listeners se registran en `bindEvents()`, no dentro del arranque de `deviceready`, para
 que los dos caminos de arranque (Cordova y navegador) compartan el mismo cableado.
 
-## R2-P1 — Accesibilidad (completar lo que la ronda 1 dejó a medias)
+## R2-P1 — Accesibilidad (completar lo que la ronda 1 dejó a medias) ✔
 
-La ronda 1 solo cubrió las celdas del tablero. El resto de controles siguen sin cubrir.
-
-- [ ] **Controles de icono inalcanzables por teclado** [verificado] — `btnTema`, `btnAyuda`,
-      `btnVolumen`, `jug1` y `jug2` son elementos `<i>` con `onclick`: sin `tabindex`, sin `role`,
-      sin `aria-label`, y `document.activeElement` no los alcanza. Convertir a `<button>` (o
-      replicar el patrón aplicado a las celdas)
-- [ ] **Sin estilo de foco visible** [verificado: no hay ninguna regla `:focus`/`:focus-visible`
-      en `app.css`] — además `outline: none` en `#txtNivel` (línea ~210) y `.config-select`
-      (línea ~372) quita el anillo de los controles nativos. Definir `:focus-visible` explícito
-      (WCAG 2.4.7)
-- [ ] **Estructura ARIA del tablero inválida** — `#tableroGrid` tiene `role="grid"` pero sus hijos
-      son `role="button"`; un `grid` requiere `row`/`gridcell`. Elegir una: quitar `role="grid"`
-      del contenedor, o pasar a `gridcell` + navegación con flechas
-- [ ] **Slider de volumen sin nombre accesible** [verificado] — `#volSlider` no tiene `<label>` ni
-      `aria-label`; un lector de pantalla solo anuncia "slider"
-- [ ] **Modales sin gestión de foco** [verificado: Escape no cierra] — no hay trampa de foco, el
-      foco no se mueve al abrir ni se restaura al cerrar, y el fondo sigue siendo tabulable
-- [ ] **Sin `prefers-reduced-motion`** — animación de línea ganadora y pulso de los puntos de
-      "Pensando" se reproducen siempre
+- [x] **Controles de icono inalcanzables por teclado** — `btnTema`, `btnAyuda`, `btnVolumen`,
+      `jug1` y `jug2` pasan de `<i>` con `onclick` a `<button>` con el icono dentro
+      (`aria-hidden`) y nueva clase `.btn-icono` que les quita la apariencia nativa. Los render
+      correspondientes apuntan ahora al `<i>` interior. `aria-label` dinámico y traducido en
+      volumen (Silenciar/Activar sonido) y jugadores ("Jugador 1: humano. Pulsa para cambiar a
+      IA"). Añadido también `aria-label` a `btnTimer`, `btnTorneo`, `btnStats` y `btnIdioma`, que
+      solo tenían `title`, y `aria-hidden` a los 34 iconos decorativos (HTML y generados por JS)
+- [x] **Sin estilo de foco visible** — regla `:focus-visible` global (ámbar sobre el fondo
+      turquesa) más una variante turquesa con `outline-offset` negativo para las celdas, que son
+      claras u oscuras según el tema. Eliminados los dos `outline: none` de `#txtNivel` y
+      `.config-select` que anulaban el anillo (WCAG 2.4.7)
+- [x] **Estructura ARIA del tablero inválida** — `#tableroGrid` pasa de `role="grid"` a
+      `role="group"`, coherente con hijos `role="button"`. Además navegación con flechas entre
+      celdas: izquierda/derecha no saltan de fila y los cuatro bordes no se salen del tablero
+- [x] **Slider de volumen sin nombre accesible** — `aria-label` traducido vía `data-i18n-aria`
+- [x] **Modales sin gestión de foco** — nuevos `alAbrirModal()`, `alCerrarModal()` y
+      `onKeyDownGlobal()`: el foco entra al abrir (botón principal), queda atrapado con Tab y
+      Shift+Tab, Escape cierra, y al cerrar vuelve al elemento que lo abrió. `hayModalAbierto()` y
+      `cerrarModalAbierto()` se reescriben sobre una tabla `MODALES` común. El cuerpo de la ayuda,
+      que tiene scroll propio, recibe `tabindex="0"` para poder recorrerlo con el teclado
+- [x] **Sin `prefers-reduced-motion`** — media query que desactiva animación por animación en vez
+      de con una regla global: un `animation: none` indiscriminado dejaría los puntos de
+      "Pensando" en su fotograma final (`opacity: 0`), invisibles
 
 ## R2-P2 — Infraestructura del proyecto
 

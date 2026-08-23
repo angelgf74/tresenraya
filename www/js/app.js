@@ -130,27 +130,37 @@ function renderTodo() {
     renderExtras();
 }
 
+// Los controles de icono son <button> con un <i> dentro: la clase del icono va
+// en el <i>, y la del estado (conturno/sinturno) en el propio boton.
 function renderTema() {
-    const btn = document.getElementById('btnTema');
-    btn.className = Estado.tema === 'claro' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    const icono = document.querySelector('#btnTema i');
+    icono.className = Estado.tema === 'claro' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
 }
 
 function renderVolumen() {
     document.getElementById('volSlider').value = Estado.volumen;
-    const btn = document.getElementById('btnVolumen');
-    if (Estado.silenciado || Estado.volumen === 0)   btn.className = 'fa-solid fa-volume-xmark';
-    else if (Estado.volumen <= 50)                   btn.className = 'fa-solid fa-volume-low';
-    else                                              btn.className = 'fa-solid fa-volume-high';
+    const btn   = document.getElementById('btnVolumen');
+    const icono = btn.querySelector('i');
+    const mudo  = Estado.silenciado || Estado.volumen === 0;
+
+    if (mudo)                      icono.className = 'fa-solid fa-volume-xmark';
+    else if (Estado.volumen <= 50) icono.className = 'fa-solid fa-volume-low';
+    else                           icono.className = 'fa-solid fa-volume-high';
+
+    btn.setAttribute('aria-label', t(mudo ? 'activarSonido' : 'silenciar'));
 }
 
 function renderJugadores() {
     for (let idx = 0; idx < 2; idx++) {
-        const el = document.getElementById(`jug${idx + 1}`);
-        const icono = Estado.tipoJugador[idx] === 0 ? 'fa-solid fa-user' : 'fa-brands fa-android';
+        const btn = document.getElementById(`jug${idx + 1}`);
+        const esIa = Estado.tipoJugador[idx] === 1;
         // jug1(idx=0) es el jugador 1 (X) y jug2(idx=1) el jugador 2 (O),
         // asi que tiene el turno el que coincide con tablero.turno (idx + 1).
         const conTurno = Estado.tablero.turno === idx + 1 && !Estado.tablero.terminado;
-        el.className = `${icono} tipojugador ${conTurno ? 'conturno' : 'sinturno'}`;
+
+        btn.querySelector('i').className = esIa ? 'fa-brands fa-android' : 'fa-solid fa-user';
+        btn.className = `tipojugador ${conTurno ? 'conturno' : 'sinturno'}`;
+        btn.setAttribute('aria-label', t(esIa ? 'jugadorEsIA' : 'jugadorEsHumano', { n: idx + 1 }));
 
         const col = document.getElementById(`colJugador${idx + 1}`);
         col.style.background = conTurno ? 'var(--jugador-activo-bg)' : '';
@@ -263,10 +273,27 @@ function crearCeldasDOM() {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 onCeldaClick(i);
+                return;
             }
+            const paso = PASO_FLECHA[e.key];
+            if (paso === undefined) return;
+            e.preventDefault();
+            moverFocoCelda(i, paso);
         });
         grid.appendChild(celda);
     }
+}
+
+const PASO_FLECHA = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 };
+
+// Desplaza el foco por el tablero con las flechas. Izquierda y derecha no
+// saltan de fila; las celdas bloqueadas (tabindex -1) siguen siendo
+// enfocables por programa, para poder atravesarlas.
+function moverFocoCelda(desde, paso) {
+    const destino = desde + paso;
+    if (destino < 0 || destino > 8) return;
+    if (Math.abs(paso) === 1 && Math.floor(destino / 3) !== Math.floor(desde / 3)) return;
+    document.querySelectorAll('.celda')[destino].focus();
 }
 
 // ── Lógica del juego ───────────────────────────────────
@@ -369,32 +396,35 @@ function abrirModalPartida() {
     if (Estado.tablero.ganador === -1) {
         html = `<div class="modal-resultado"><b>${t('tablas')}</b>
             <span class="fa-stack fa-2x">
-                <i class="far fa-circle fa-stack-2x"></i>
-                <i class="fas fa-times fa-stack-1x"></i>
+                <i class="far fa-circle fa-stack-2x" aria-hidden="true"></i>
+                <i class="fas fa-times fa-stack-1x" aria-hidden="true"></i>
             </span></div>`;
     } else {
         const ficha = Estado.tablero.ganador === 1
-            ? `<i class="fas fa-times fa-3x"></i>`
-            : `<i class="far fa-circle fa-3x"></i>`;
+            ? `<i class="fas fa-times fa-3x" aria-hidden="true"></i>`
+            : `<i class="far fa-circle fa-3x" aria-hidden="true"></i>`;
         html = `<div class="modal-resultado"><b>${t('ganador')}</b>${ficha}</div>`;
     }
     document.getElementById('modalBody').innerHTML = html;
     document.getElementById('modalBackdrop').style.display = '';
     document.getElementById('modalPartida').style.display  = '';
+    alAbrirModal('modalPartida');
 }
 
 function abrirModalTorneo() {
     document.getElementById('iconoCampeon').innerHTML = Estado.ganadorTorneo === 1
-        ? `<i class="fas fa-times fa-3x"></i>`
-        : `<i class="far fa-circle fa-3x"></i>`;
+        ? `<i class="fas fa-times fa-3x" aria-hidden="true"></i>`
+        : `<i class="far fa-circle fa-3x" aria-hidden="true"></i>`;
     document.getElementById('marcadorTorneo').textContent = `${Estado.marcador[1]} – ${Estado.marcador[2]}`;
     document.getElementById('modalTorneoBackdrop').style.display = '';
     document.getElementById('modalTorneo').style.display         = '';
+    alAbrirModal('modalTorneo');
 }
 
 async function aceptarModal() {
     document.getElementById('modalBackdrop').style.display = 'none';
     document.getElementById('modalPartida').style.display  = 'none';
+    alCerrarModal();
     await delay(600);
     await nuevoJuego();
 }
@@ -402,6 +432,7 @@ async function aceptarModal() {
 async function aceptarModalTorneo() {
     document.getElementById('modalTorneoBackdrop').style.display = 'none';
     document.getElementById('modalTorneo').style.display         = 'none';
+    alCerrarModal();
     Estado.marcador = [0, 0, 0];
     Estado.turnoInicial = 1;
     await delay(600);
@@ -502,9 +533,22 @@ function cancelarTimer() {
 // ── Pausa del temporizador (modales y segundo plano) ──
 // Sin esto el reloj sigue corriendo mientras el usuario lee la ayuda o tiene
 // la app en segundo plano, y pierde el turno por una jugada aleatoria.
+// Orden de prioridad al cerrar: primero los modales ligeros (ayuda y
+// estadisticas); los de resultado ejecutan su accion de aceptar, que encadena
+// una partida nueva.
+const MODALES = [
+    { id: 'modalAyuda',   cerrar: () => cerrarAyuda() },
+    { id: 'modalStats',   cerrar: () => cerrarEstadisticas() },
+    { id: 'modalPartida', cerrar: () => aceptarModal() },
+    { id: 'modalTorneo',  cerrar: () => aceptarModalTorneo() }
+];
+
+function modalAbierto() {
+    return MODALES.find(m => document.getElementById(m.id).style.display !== 'none') || null;
+}
+
 function hayModalAbierto() {
-    return ['modalPartida', 'modalTorneo', 'modalStats', 'modalAyuda']
-        .some(id => document.getElementById(id).style.display !== 'none');
+    return modalAbierto() !== null;
 }
 
 function pausarTimer() {
@@ -575,8 +619,8 @@ function renderEstadisticas() {
     const pct = (n) => j === 0 ? '0%' : `${Math.round(n / j * 100)}%`;
     document.getElementById('statsBody').innerHTML = `
         <div class="stats-total">${t('partidasJugadas')}: <b>${j}</b></div>
-        <div class="stats-linea"><i class="fas fa-times ayuda-x"></i> ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
-        <div class="stats-linea"><i class="far fa-circle ayuda-o"></i> ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
+        <div class="stats-linea"><i class="fas fa-times ayuda-x" aria-hidden="true"></i> ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
+        <div class="stats-linea"><i class="far fa-circle ayuda-o" aria-hidden="true"></i> ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
         <div class="stats-linea">${t('tablasStats')}: <b>${Estado.estadisticas.tablas}</b> (${pct(Estado.estadisticas.tablas)})</div>`;
 }
 
@@ -585,11 +629,13 @@ function mostrarEstadisticas() {
     renderEstadisticas();
     document.getElementById('statsBackdrop').style.display = '';
     document.getElementById('modalStats').style.display    = '';
+    alAbrirModal('modalStats');
 }
 
 function cerrarEstadisticas() {
     document.getElementById('statsBackdrop').style.display = 'none';
     document.getElementById('modalStats').style.display    = 'none';
+    alCerrarModal();
     reanudarTimer();
 }
 
@@ -604,11 +650,62 @@ function mostrarAyuda() {
     pausarTimer();
     document.getElementById('ayudaBackdrop').style.display = '';
     document.getElementById('modalAyuda').style.display    = '';
+    alAbrirModal('modalAyuda');
 }
 function cerrarAyuda() {
     document.getElementById('ayudaBackdrop').style.display = 'none';
     document.getElementById('modalAyuda').style.display    = 'none';
+    alCerrarModal();
     reanudarTimer();
+}
+
+// ── Foco en modales ────────────────────────────────────
+// Un modal debe recibir el foco al abrirse, retenerlo mientras esta abierto
+// (si no, el tabulador se va al contenido de detras) y devolverlo al elemento
+// que lo abrio al cerrarse.
+let focoPrevio = null;
+
+const SELECTOR_ENFOCABLES =
+    'button:not([disabled]), input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
+
+function enfocablesDe(idModal) {
+    return Array.from(document.getElementById(idModal).querySelectorAll(SELECTOR_ENFOCABLES))
+        .filter(el => el.getClientRects().length > 0);
+}
+
+function alAbrirModal(idModal) {
+    focoPrevio = document.activeElement;
+    const enfocables = enfocablesDe(idModal);
+    // El boton principal (Aceptar / Cerrar) es el ultimo del pie.
+    if (enfocables.length) enfocables[enfocables.length - 1].focus();
+}
+
+function alCerrarModal() {
+    if (focoPrevio && document.contains(focoPrevio)) focoPrevio.focus();
+    focoPrevio = null;
+}
+
+function onKeyDownGlobal(e) {
+    const m = modalAbierto();
+    if (!m) return;
+
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        m.cerrar();
+        return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const enfocables = enfocablesDe(m.id);
+    if (!enfocables.length) return;
+
+    const primero = enfocables[0];
+    const ultimo  = enfocables[enfocables.length - 1];
+    const dentro  = document.getElementById(m.id).contains(document.activeElement);
+
+    if (!dentro)                                        { e.preventDefault(); primero.focus(); }
+    else if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
 }
 
 // ── Toast ──────────────────────────────────────────────
@@ -627,13 +724,10 @@ function mostrarToast(mensaje, ms) {
 // un modal abierto. Sin "pause"/"resume" el temporizador sigue contando con la
 // app en segundo plano (KeepRunning es true por defecto).
 function cerrarModalAbierto() {
-    const visible = (id) => document.getElementById(id).style.display !== 'none';
-
-    if (visible('modalAyuda'))   { cerrarAyuda();         return true; }
-    if (visible('modalStats'))   { cerrarEstadisticas();  return true; }
-    if (visible('modalPartida')) { aceptarModal();        return true; }
-    if (visible('modalTorneo'))  { aceptarModalTorneo();  return true; }
-    return false;
+    const m = modalAbierto();
+    if (!m) return false;
+    m.cerrar();
+    return true;
 }
 
 function onBackButton() {
@@ -689,6 +783,9 @@ function bindEvents() {
     document.getElementById('btnResetStats').addEventListener('click', resetEstadisticas);
     document.getElementById('selTiempoLimite').addEventListener('change', e => onTiempoLimiteChange(e.target.value));
     document.getElementById('selBestOf').addEventListener('change', e => onBestOfChange(e.target.value));
+
+    // Escape para cerrar y tabulador atrapado dentro del modal abierto.
+    document.addEventListener('keydown', onKeyDownGlobal);
 
     // Ciclo de vida. "backbutton", "pause" y "resume" solo los emite Cordova
     // (en el navegador nunca disparan), pero se registran aqui para que ambos
