@@ -46,8 +46,11 @@ const Estado = {
     partidasJugadas: 0,
     interstitialPendiente: false,
 
-    // Estadísticas históricas (persisten entre reinicios de la app)
-    estadisticas: { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0 }
+    // Estadísticas históricas (persisten entre reinicios de la app).
+    // Las globales van por símbolo (X/O); vsIA guarda además, por nivel, el
+    // resultado visto desde el lado del humano, que es lo que de verdad
+    // interesa saber: "¿cómo se me da contra la IA en Difícil?".
+    estadisticas: { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0, vsIA: {} }
 };
 
 // ── Helpers ────────────────────────────────────────────
@@ -60,6 +63,8 @@ const esIA        = (jug) => Estado.tipoJugador[jug - 1] === 1;
 // deshacerJugada() siempre encuentra una posición jugable antes de vaciarla.
 const puedeDeshacer = () => !Estado.tablero.terminado && !Estado.esperandoIA &&
     Estado.historial.some(t => !esIA(t.turno));
+// Solo tiene sentido cuando hay IA: entonces el humano es el otro jugador.
+const jugadorHumano = () => (Estado.tipoJugador[0] === 0 ? 1 : 2);
 const metaTorneo  = () => Math.ceil(Estado.bestOf / 2);
 const delay       = (ms) => new Promise(r => setTimeout(r, ms));
 const guardarHistorial = () => Estado.historial.push(Estado.tablero.clonar());
@@ -93,7 +98,13 @@ function cargarPrefs() {
         if (Array.isArray(jugs) && jugs.length === 2) Estado.tipoJugador = jugs;
 
         const est = JSON.parse(localStorage.getItem('Estadisticas'));
-        if (est && typeof est.jugadas === 'number') Estado.estadisticas = est;
+        if (est && typeof est.jugadas === 'number') {
+            Estado.estadisticas = est;
+            // Las estadísticas guardadas antes de R3 no tienen el desglose por
+            // nivel: se conserva el histórico global y el desglose empieza de
+            // cero, en vez de tirar todo lo acumulado.
+            if (!est.vsIA || typeof est.vsIA !== 'object') est.vsIA = {};
+        }
     } catch (e) {
         // localStorage no disponible (incógnito, cuota, etc.) — se sigue con valores por defecto
     }
@@ -104,6 +115,37 @@ function cargarPrefs() {
 
 function guardarPref(clave, valor) {
     try { localStorage.setItem(clave, valor); } catch (e) {}
+}
+
+// ── Estadísticas ───────────────────────────────────────
+// Los niveles se listan de más fácil a más difícil, que es el orden en que se
+// muestran y el que espera quien mira sus resultados.
+const NIVELES = [
+    { valor: NIVEL_FACIL,     clave: 'nivelFacil' },
+    { valor: NIVEL_MEDIO,     clave: 'nivelMedio' },
+    { valor: NIVEL_DIFICIL,   clave: 'nivelDificil' },
+    { valor: NIVEL_IMPOSIBLE, clave: 'nivelImposible' }
+];
+
+const marcadorVacio = () => ({ jugadas: 0, ganadas: 0, perdidas: 0, tablas: 0 });
+
+// Anota una partida terminada. `ganador` es 1 (X), 2 (O) o -1 (tablas).
+// Sin DOM a propósito: así se puede probar el conteo por separado.
+function anotarEstadisticas(ganador) {
+    const e = Estado.estadisticas;
+    e.jugadas++;
+    if (ganador === 1)      e.victoriasX++;
+    else if (ganador === 2) e.victoriasO++;
+    else                    e.tablas++;
+
+    // Las partidas entre dos humanos no dicen nada sobre la IA
+    if (!hayIA()) return;
+
+    const bloque = e.vsIA[Estado.nivel] || (e.vsIA[Estado.nivel] = marcadorVacio());
+    bloque.jugadas++;
+    if (ganador === -1)                    bloque.tablas++;
+    else if (ganador === jugadorHumano())  bloque.ganadas++;
+    else                                   bloque.perdidas++;
 }
 
 // ── Sesión: la partida en curso ────────────────────────
@@ -522,10 +564,10 @@ async function refrescarEstado() {
 
     const gen = Estado.generacion;
     cancelarTimer();
-    if (Estado.tablero.ganador === 1)      { Estado.marcador[1]++; Estado.estadisticas.victoriasX++; }
-    else if (Estado.tablero.ganador === 2) { Estado.marcador[2]++; Estado.estadisticas.victoriasO++; }
-    else                                    { Estado.marcador[0]++; Estado.estadisticas.tablas++; }
-    Estado.estadisticas.jugadas++;
+    if (Estado.tablero.ganador === 1)      Estado.marcador[1]++;
+    else if (Estado.tablero.ganador === 2) Estado.marcador[2]++;
+    else                                    Estado.marcador[0]++;
+    anotarEstadisticas(Estado.tablero.ganador);
     guardarPref('Estadisticas', JSON.stringify(Estado.estadisticas));
     guardarSesion();
 
@@ -801,13 +843,33 @@ function onBestOfChange(val) {
 
 // ── Estadísticas ───────────────────────────────────────
 function renderEstadisticas() {
-    const j = Estado.estadisticas.jugadas;
+    const e = Estado.estadisticas;
+    const j = e.jugadas;
     const pct = (n) => j === 0 ? '0%' : `${Math.round(n / j * 100)}%`;
+
+    // Solo se listan los niveles en los que se ha jugado: una tabla con tres
+    // filas a cero no dice nada y ocupa la mitad del modal.
+    const conPartidas = NIVELES.filter(n => (e.vsIA[n.valor] || {}).jugadas > 0);
+    const vsIA = conPartidas.length === 0 ? '' : `
+        <div class="stats-titulo">${t('contraIA')}</div>
+        ${conPartidas.map(n => {
+            const b = e.vsIA[n.valor];
+            return `<div class="stats-linea stats-nivel">
+                <span class="stats-nivel-nombre">${t(n.clave)}</span>
+                <span class="stats-nivel-cifras">
+                    <b>${b.ganadas}</b>${t('abrevGanadas')} ·
+                    <b>${b.perdidas}</b>${t('abrevPerdidas')} ·
+                    <b>${b.tablas}</b>${t('abrevTablas')}
+                </span>
+            </div>`;
+        }).join('')}`;
+
     document.getElementById('statsBody').innerHTML = `
         <div class="stats-total">${t('partidasJugadas')}: <b>${j}</b></div>
-        <div class="stats-linea">${svgIco('i-x', 'ayuda-x')} ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
-        <div class="stats-linea">${svgIco('i-o', 'ayuda-o')} ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
-        <div class="stats-linea">${t('tablasStats')}: <b>${Estado.estadisticas.tablas}</b> (${pct(Estado.estadisticas.tablas)})</div>`;
+        <div class="stats-linea">${svgIco('i-x', 'ayuda-x')} ${t('victoriasX')}: <b>${e.victoriasX}</b> (${pct(e.victoriasX)})</div>
+        <div class="stats-linea">${svgIco('i-o', 'ayuda-o')} ${t('victoriasO')}: <b>${e.victoriasO}</b> (${pct(e.victoriasO)})</div>
+        <div class="stats-linea">${t('tablasStats')}: <b>${e.tablas}</b> (${pct(e.tablas)})</div>
+        ${vsIA}`;
 }
 
 function mostrarEstadisticas() {
@@ -826,7 +888,7 @@ function cerrarEstadisticas() {
 }
 
 function resetEstadisticas() {
-    Estado.estadisticas = { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0 };
+    Estado.estadisticas = { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0, vsIA: {} };
     guardarPref('Estadisticas', JSON.stringify(Estado.estadisticas));
     renderEstadisticas();
 }

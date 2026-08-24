@@ -47,6 +47,13 @@ const TRADUCCIONES = {
         victoriasX: 'Victorias X',
         victoriasO: 'Victorias O',
         tablasStats: 'Tablas',
+        contraIA: 'Contra la IA',
+        // Abreviaturas del desglose por nivel: G ganadas, P perdidas, T tablas.
+        // Van pegadas a la cifra ("6G · 2P · 1T") para que las cuatro filas
+        // quepan sin partirse en el ancho del modal.
+        abrevGanadas: 'G',
+        abrevPerdidas: 'P',
+        abrevTablas: 'T',
         ayudaComoJugarTitulo: '¿Cómo jugar?',
         ayudaComoJugarTexto: 'Coloca tu ficha en una casilla vacía. Gana el primero en completar una fila, columna o diagonal. Si se llenan todas las casillas sin ganador, es un empate.',
         ayudaFichasTitulo: 'Fichas',
@@ -107,6 +114,10 @@ const TRADUCCIONES = {
         victoriasX: 'X wins',
         victoriasO: 'O wins',
         tablasStats: 'Draws',
+        contraIA: 'Against the AI',
+        abrevGanadas: 'W',
+        abrevPerdidas: 'L',
+        abrevTablas: 'D',
         ayudaComoJugarTitulo: 'How to play?',
         ayudaComoJugarTexto: 'Place your mark on an empty cell. The first to complete a row, column or diagonal wins. If every cell fills up with no winner, it\'s a draw.',
         ayudaFichasTitulo: 'Marks',

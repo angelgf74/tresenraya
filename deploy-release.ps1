@@ -87,22 +87,10 @@ Crea build.json con:
     exit 1
 }
 
-# ── 2. Verificar dispositivo ADB (solo para APK) ──────────────────────────────
-$deviceId = $null
-if ($Modo -eq 'apk') {
-    Write-Host "`n[1/3] Verificando dispositivo ADB..." -ForegroundColor Cyan
-    $devices = adb devices 2>&1 | Select-String -Pattern '\bdevice\b' | Where-Object { $_ -notmatch 'List of' }
-    if (-not $devices) {
-        Write-Host "ERROR: No hay dispositivos ADB conectados." -ForegroundColor Red
-        Write-Host "Conecta el dispositivo por USB y activa la depuracion USB." -ForegroundColor Yellow
-        exit 1
-    }
-    $deviceId = ($devices[0].ToString() -split '\s+')[0].Trim()
-    Write-Host "Dispositivo detectado: $deviceId" -ForegroundColor Green
-}
-
-# ── 3. Build ──────────────────────────────────────────────────────────────────
-$pasos = if ($Modo -eq 'apk') { '2/3' } else { '1/2' }
+# ── 2. Build ──────────────────────────────────────────────────────────────────
+# El dispositivo se comprueba DESPUES de compilar: compilar no lo necesita, y
+# antes bastaba con que el cable se soltara para tirar el build entero.
+$pasos = if ($Modo -eq 'apk') { '1/2' } else { '1/2' }
 Write-Host "`n[$pasos] Compilando $($Modo.ToUpper()) de release firmado..." -ForegroundColor Cyan
 Set-Location $PROJECT_ROOT
 
@@ -129,8 +117,18 @@ if ($Modo -eq 'apk') {
     $size = [math]::Round((Get-Item $APK_PATH).Length / 1MB, 2)
     Write-Host "APK generado: $APK_PATH ($size MB)" -ForegroundColor Green
 
-    # ── 5. Instalar por USB ───────────────────────────────────────────────────
-    Write-Host "`n[3/3] Instalando en dispositivo $deviceId..." -ForegroundColor Cyan
+    # ── 4. Instalar por USB ───────────────────────────────────────────────────
+    # Ya con el APK a salvo: si aqui falta el movil, no se ha perdido el build
+    # y basta con enchufarlo y lanzar .\install-usb.ps1
+    Write-Host "`n[2/2] Instalando por USB..." -ForegroundColor Cyan
+    $devices = adb devices 2>&1 | Select-String -Pattern '\bdevice\b' | Where-Object { $_ -notmatch 'List of' }
+    if (-not $devices) {
+        Write-Host "El APK esta compilado, pero no hay ningun movil conectado." -ForegroundColor Yellow
+        Write-Host "Conectalo y ejecuta: .\install-usb.ps1" -ForegroundColor Yellow
+        exit 0
+    }
+    $deviceId = ($devices[0].ToString() -split '\s+')[0].Trim()
+    Write-Host "Dispositivo: $deviceId" -ForegroundColor DarkGray
     $result = adb -s $deviceId install -r $APK_PATH 2>&1
     Write-Host $result
     if ($result -match 'Success') {

@@ -34,7 +34,9 @@ function cargarApp(prefsIniciales) {
         'Tablero', 'Juego', 'document', 'window', 'localStorage', 'navigator',
         't', 'aplicarIdioma', 'playSound', 'setSoundVolume', 'setSoundMuted',
         codigo + '\n;return { Estado, puedeDeshacer, esIA, hayIA, guardarHistorial,'
-               + ' guardarSesion, restaurarSesion, CLAVE_SESION };'
+               + ' guardarSesion, restaurarSesion, CLAVE_SESION, cargarPrefs,'
+               + ' anotarEstadisticas, jugadorHumano, NIVELES,'
+               + ' NIVEL_FACIL, NIVEL_MEDIO, NIVEL_DIFICIL, NIVEL_IMPOSIBLE };'
     );
 
     const app = fabrica(

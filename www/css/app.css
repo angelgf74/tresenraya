@@ -698,6 +698,31 @@ h1.burning {
 }
 .stats-linea:last-child { border-bottom: none; }
 
+/* Desglose por nivel: nombre a la izquierda, cifras a la derecha */
+/* Sin borde propio: la última línea del bloque global ya trae el suyo, y las
+   dos juntas se veían como un separador doble. */
+.stats-titulo {
+    font-family: 'Bitter', Georgia, serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #26221B;
+    margin: 1rem 0 0.2rem;
+    text-align: center;
+}
+
+.stats-nivel {
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+.stats-nivel-nombre { color: #4A453B; }
+.stats-nivel-cifras {
+    white-space: nowrap;
+    color: #736C5E;
+    font-variant-numeric: tabular-nums;
+}
+.stats-nivel-cifras b { color: #26221B; }
+
 /* ── Modal ayuda ── */
 .ayuda-content {
     max-width: min(480px, 94vw);

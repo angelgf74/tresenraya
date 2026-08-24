@@ -333,8 +333,16 @@ arreglarlos.
       tableros de verdad y no objetos planos —que reventarían al deshacer— y que una partida ya
       terminada no se reanude pero sí conserve marcador y modos. Verificado además en el navegador
       comparando el estado antes de cerrar y al volver a abrir: idéntico, con Deshacer disponible
-- [ ] **Estadísticas poco informativas** — cuentan por símbolo (X/O), no distinguen si ganó el
-      humano o la IA, ni por nivel de dificultad
+- [x] **Estadísticas poco informativas** — contaban por símbolo (X/O), sin distinguir si ganó el
+      humano o la IA ni en qué nivel. Se conserva ese bloque global (es lo que hay acumulado) y se
+      añade `estadisticas.vsIA`, con una cuenta por nivel vista **desde el lado del humano**: da
+      igual que juegue con X o con O, "ganadas" son las suyas. Las partidas entre dos humanos no
+      entran ahí, que no dicen nada de la IA. El modal muestra una sección "Contra la IA" con una
+      línea por nivel jugado (`0G · 2P · 0T`), y omite los niveles sin partidas para no llenar
+      medio modal de ceros. El conteo se extrajo a `anotarEstadisticas()`, sin DOM, y tiene seis
+      tests: entre ellos que con el humano de O una victoria de X cuente como derrota suya —el
+      signo depende de quién es el humano, no del símbolo— y que unas estadísticas guardadas antes
+      de este cambio se conserven en vez de tirarse
 - [ ] **Torneo: bajar el "mejor de" con el torneo ya ganado** lo reinicia en silencio, sin declarar
       campeón (`onBestOfChange`)
 
