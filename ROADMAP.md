@@ -217,3 +217,84 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       unidad completa más allá del centro de cada celda extrema (el centro ya está a 0.5 de su
       borde, así que sobraba media celda por lado, muy visible en diagonales). Alargada 0.5 en su
       lugar; verificado en dispositivo que ahora termina justo en el borde del tablero
+
+---
+
+# Ronda 3 — auditoría completa
+
+Repaso a fondo de toda la aplicación (lógica de `app.js`, red, empaquetado, cumplimiento de Play,
+accesibilidad) tras cerrar la ronda 2. Los dos primeros se reprodujeron en dispositivo antes de
+arreglarlos.
+
+## R3-P0 — Bugs de estado reproducidos en dispositivo ✔
+
+- [x] **Deshacer congelaba la partida** — con la IA como jugador 1 (X, mueve primera), la primera
+      posición del historial tiene turno de IA. `puedeDeshacer()` solo comprobaba que el historial
+      no estuviese vacío, así que una sola pulsación dejaba el tablero esperando una jugada de IA
+      que ya nadie dispara: celdas bloqueadas, botón oculto, sin salida salvo cambiar de nivel o de
+      jugador. Reproducido en dispositivo. La condición pasa a exigir que quede en la pila alguna
+      posición con turno humano (`Estado.historial.some(t => !esIA(t.turno))`), que es a la que
+      `deshacerJugada()` sabe volver; `hayHumano()` desaparece porque la nueva condición lo
+      subsume. Con test de regresión (`test/deshacer.test.js`), verificado que falla con la
+      condición antigua
+- [x] **Ficha fantasma por reentrancia de la IA** — durante los 380 ms de "Pensando", cualquier
+      acción que reinicie la partida (cambiar nivel o tipo de jugador, torneo) hacía que la jugada
+      en vuelo cayese sobre el tablero ya reseteado: aparecía una ficha que no había puesto nadie.
+      Reproducido en dispositivo. Nuevo `Estado.generacion`, que `iniciarJuego()` incrementa;
+      `jugadaIA()`, `refrescarEstado()`, `onCeldaClick()` y `tiempoAgotado()` capturan su valor y
+      se abortan tras cada `await` si ha cambiado. De paso arregla que el modal de resultado se
+      abriese sobre una partida nueva si se reiniciaba durante su pausa de 1600 ms
+
+## R3-P1 — La app no funciona sin conexión
+
+- [ ] **Ni una fuente ni un CSS de terceros va dentro del APK** — Font Awesome, Bootstrap y Google
+      Fonts se descargan de tres CDNs en cada arranque en frío (verificado: `assets/www/` solo
+      contiene `app.css` y los `js/` propios). En una instalación nueva sin cobertura **las X y las
+      O no se dibujan** (son glifos de Font Awesome), ni los avatares ni los botones de extras: el
+      juego queda inservible, y la ficha de Play afirma justo lo contrario. Además Font Awesome se
+      carga sin `integrity` (Bootstrap sí lo lleva)
+- [ ] **Peso desproporcionado** — Bootstrap entero (~230 KB) para 4 clases de botón y Font Awesome
+      entero (~100 KB más fuentes) para ~15 iconos. Pasando los iconos a SVG inline y escribiendo a
+      mano esos 4 estilos se eliminan las tres dependencias de red de golpe
+
+## R3-P2 — Play y cumplimiento
+
+- [ ] **Sin consentimiento GDPR (UMP)** — `cordova-plugin-admob-free` 0.27.0 es de 2018 y no trae
+      CMP. AdMob lo exige para el EEE desde enero de 2024 y el público de la app es mayoritariamente
+      español: riesgo de restricción de la cuenta
+- [ ] **Plugin de anuncios abandonado** — siete años sin mantenimiento; ya requiere el
+      `resolutionStrategy` de `android-config/build-extras.gradle` para compilar (fija
+      `play-services-ads` 11.0.4, que se fuerza a 23.6.0). Con targetSdk 37 esto acabará rompiendo.
+      Salida: migrar a `admob-plus-cordova`
+- [ ] **Ficha de Play** — declarar el `AD_ID` (ya presente en el manifiesto) en el formulario de
+      seguridad de los datos, enlazar política de privacidad, y rehacer las capturas, que siguen
+      mostrando el diseño turquesa anterior al rediseño
+
+## R3-P3 — Accesibilidad, limpieza y producto
+
+- [ ] **Contraste** — `--ink-suave` sobre el fondo claro da 4,40:1, justo por debajo del 4,5 de
+      WCAG AA (afecta a Deshacer, temporizador y etiquetas de configuración); oscurecerlo a
+      ~`#6E6758` lo resuelve. El jugador sin turno queda en 1,77:1 (claro) y 2,26:1 (oscuro), casi
+      invisible. Texto principal y fichas van sobrados (14,8:1 y ~5-6:1)
+- [ ] **Objetivos táctiles pequeños** — medidos del árbol de accesibilidad: fila de extras 33 dp,
+      reiniciar marcador 32 dp, control de volumen 7 dp de alto, frente a los 48 dp recomendados
+      (las celdas, en cambio, están en 109 dp)
+- [ ] **Código muerto** — `window.setTema` en `sounds.js`, las variables CSS `--nivel-focus` y
+      `--wash`, y las preferencias `SplashScreenDelay` / `AutoHideSplashScreen` de `config.xml`
+      (cuyo plugin no está instalado)
+- [ ] **CSP más estricta** — `'unsafe-eval'` no lo necesita nadie (Bootstrap se usa solo como CSS)
+      y `media-src *` tampoco (el sonido es WebAudio sintetizado). `<access origin>` no incluye los
+      dominios de Google Fonts que sí están en la CSP
+- [ ] **`app.js` sin cobertura real** — 880 líneas con toda la máquina de estados y un único test
+      (el de `puedeDeshacer` que trajo R3-P0), porque el resto llama a `getElementById` en cada
+      paso. Separar la lógica de estado del renderizado permitiría probar de verdad los flujos
+      donde han aparecido los dos bugs de esta ronda
+- [ ] **La partida en curso no sobrevive al cierre de la app** — solo persisten preferencias y
+      estadísticas; cerrar a media partida la pierde. Guardar tablero, turno y marcador en `pause`
+- [ ] **Estadísticas poco informativas** — cuentan por símbolo (X/O), no distinguen si ganó el
+      humano o la IA, ni por nivel de dificultad
+- [ ] **Torneo: bajar el "mejor de" con el torneo ya ganado** lo reinicia en silencio, sin declarar
+      campeón (`onBestOfChange`)
+
+Medido y descartado como problema: la IA a profundidad completa tarda 6,9 ms en el peor caso
+(tablero vacío) en escritorio, así que la ventana de 380 ms de "Pensando" sobra en móvil.

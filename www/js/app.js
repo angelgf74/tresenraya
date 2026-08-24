@@ -18,6 +18,11 @@ const Estado = {
     esperandoIA: false,
     tipoJugador: [0, 1], // 0=humano, 1=IA
     historial: [], // pila de tableros previos a cada jugada, para deshacer
+    // Se incrementa en cada partida nueva. Las funciones que esperan (la IA
+    // "pensando", la pausa antes del modal de resultado) capturan su valor y
+    // se abortan al despertar si ha cambiado: sin esto, una jugada en vuelo
+    // cae sobre el tablero de la partida siguiente.
+    generacion: 0,
     tema: 'claro',
     volumen: 80,
     silenciado: false,
@@ -47,10 +52,14 @@ const Estado = {
 
 // ── Helpers ────────────────────────────────────────────
 const hayIA       = () => Estado.tipoJugador[0] === 1 || Estado.tipoJugador[1] === 1;
-const hayHumano   = () => Estado.tipoJugador[0] === 0 || Estado.tipoJugador[1] === 0;
 const esIA        = (jug) => Estado.tipoJugador[jug - 1] === 1;
-const puedeDeshacer = () => hayHumano() && Estado.historial.length > 0 &&
-    !Estado.tablero.terminado && !Estado.esperandoIA;
+// Solo se puede deshacer si en la pila queda alguna posición con turno humano.
+// No basta con que la pila no esté vacía: deshaciendo hasta una posición con
+// turno de IA el tablero queda esperando una jugada que ya nadie dispara —
+// celdas bloqueadas, botón oculto y partida congelada. Con esta condición,
+// deshacerJugada() siempre encuentra una posición jugable antes de vaciarla.
+const puedeDeshacer = () => !Estado.tablero.terminado && !Estado.esperandoIA &&
+    Estado.historial.some(t => !esIA(t.turno));
 const metaTorneo  = () => Math.ceil(Estado.bestOf / 2);
 const delay       = (ms) => new Promise(r => setTimeout(r, ms));
 const guardarHistorial = () => Estado.historial.push(Estado.tablero.clonar());
@@ -340,6 +349,7 @@ function moverFocoCelda(desde, paso) {
 // ── Lógica del juego ───────────────────────────────────
 async function iniciarJuego() {
     cancelarTimer();
+    Estado.generacion++;
     Estado.tablero.reset(Estado.turnoInicial);
     Estado.historial = [];
     Estado.esperandoIA = false;
@@ -360,6 +370,7 @@ async function onCeldaClick(celda) {
     if (Estado.tablero.terminado || Estado.esperandoIA || Estado.tablero.celdas[celda] !== 0 || esIA(Estado.tablero.turno))
         return;
 
+    const gen = Estado.generacion;
     cancelarTimer();
     guardarHistorial();
     Estado.tablero.hacerJugada(celda);
@@ -369,6 +380,7 @@ async function onCeldaClick(celda) {
     renderBajoTablero();
 
     await refrescarEstado();
+    if (gen !== Estado.generacion) return;
 
     if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
         await jugadaIA();
@@ -377,11 +389,17 @@ async function onCeldaClick(celda) {
 }
 
 async function jugadaIA() {
+    const gen = Estado.generacion;
     Estado.esperandoIA = true;
     renderBajoTablero();
     renderJugadores();
 
     await delay(380);
+    // La partida se reinició mientras la IA "pensaba" (cambio de nivel, de tipo
+    // de jugador, torneo...). Esta jugada era para un tablero que ya no existe;
+    // colocarla ahora pondría una ficha fantasma en la partida nueva.
+    // iniciarJuego() ya ha dejado esperandoIA en false, así que basta con salir.
+    if (gen !== Estado.generacion) return;
 
     const soloNoPerdedoras = Estado.nivel !== NIVEL_FACIL;
     const celda = Juego.jugada(Estado.tablero, PROFUNDIDAD_IA, Estado.nivel / 100, soloNoPerdedoras);
@@ -397,6 +415,7 @@ async function jugadaIA() {
     renderBajoTablero();
 
     await refrescarEstado();
+    if (gen !== Estado.generacion) return;
 
     if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
         await jugadaIA();
@@ -407,6 +426,7 @@ async function jugadaIA() {
 async function refrescarEstado() {
     if (!Estado.tablero.terminado) return;
 
+    const gen = Estado.generacion;
     cancelarTimer();
     if (Estado.tablero.ganador === 1)      { Estado.marcador[1]++; Estado.estadisticas.victoriasX++; }
     else if (Estado.tablero.ganador === 2) { Estado.marcador[2]++; Estado.estadisticas.victoriasO++; }
@@ -419,6 +439,11 @@ async function refrescarEstado() {
     playSound(Estado.tablero.ganador > 0 ? 'victoria' : 'empate');
 
     await delay(1600);
+    // Si durante la pausa se empezó otra partida (nivel, jugadores, torneo),
+    // el modal de resultado abriría sobre un tablero nuevo. El marcador y las
+    // estadísticas ya se contaron arriba, que es lo correcto: la partida sí
+    // terminó.
+    if (gen !== Estado.generacion) return;
 
     // Cada 2 partidas terminadas toca interstitial, pero se muestra al aceptar
     // el modal (ver aceptarModal/aceptarModalTorneo): lanzarlo aquí, justo
@@ -559,9 +584,10 @@ function resetMarcador() {
 async function deshacerJugada() {
     if (!puedeDeshacer()) return;
     cancelarTimer();
-    do {
+    while (Estado.historial.length > 0) {
         Estado.tablero = Estado.historial.pop();
-    } while (Estado.historial.length > 0 && esIA(Estado.tablero.turno));
+        if (!esIA(Estado.tablero.turno)) break;
+    }
     renderTodo();
     if (Estado.timerActivo) iniciarTimer();
 }
@@ -626,12 +652,14 @@ async function tiempoAgotado() {
     if (Estado.tablero.terminado || esIA(Estado.tablero.turno)) return;
     const libres = Estado.tablero.celdasLibres();
     if (libres.length === 0) return;
+    const gen = Estado.generacion;
     guardarHistorial();
     Estado.tablero.hacerJugada(libres[Math.floor(Math.random() * libres.length)]);
     playSound('colocar');
     renderTablero();
     renderJugadores();
     await refrescarEstado();
+    if (gen !== Estado.generacion) return;
     if (!Estado.tablero.terminado && esIA(Estado.tablero.turno)) await jugadaIA();
     else if (!Estado.tablero.terminado && Estado.timerActivo) iniciarTimer();
 }
