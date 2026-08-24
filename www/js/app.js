@@ -106,6 +106,74 @@ function guardarPref(clave, valor) {
     try { localStorage.setItem(clave, valor); } catch (e) {}
 }
 
+// ── Sesión: la partida en curso ────────────────────────
+// Hasta ahora solo sobrevivían al cierre las preferencias y las estadísticas:
+// cerrar la app a media partida la perdía, junto con el marcador y los modos
+// de torneo y temporizador. Aquí se guarda lo justo para reanudar donde se
+// dejó. Va versionado para que un cambio de formato futuro se descarte en vez
+// de reventar el arranque.
+const CLAVE_SESION = 'Sesion';
+const VERSION_SESION = 1;
+
+const tableroPlano = (t) => ({ celdas: t.celdas, turno: t.turno, ganador: t.ganador });
+
+function guardarSesion() {
+    guardarPref(CLAVE_SESION, JSON.stringify({
+        v: VERSION_SESION,
+        tablero: tableroPlano(Estado.tablero),
+        historial: Estado.historial.map(tableroPlano),
+        turnoInicial: Estado.turnoInicial,
+        marcador: Estado.marcador,
+        modoTorneo: Estado.modoTorneo,
+        bestOf: Estado.bestOf,
+        timerActivo: Estado.timerActivo,
+        tiempoLimite: Estado.tiempoLimite
+    }));
+}
+
+// Todo lo que venga de localStorage es texto que pudo quedar a medias o de una
+// versión anterior: se valida pieza a pieza y, ante cualquier duda, se empieza
+// una partida limpia.
+function esTableroValido(o) {
+    return !!o && Array.isArray(o.celdas) && o.celdas.length === 9 &&
+        o.celdas.every(c => c === 0 || c === 1 || c === 2) &&
+        (o.turno === 1 || o.turno === 2) &&
+        [-1, 0, 1, 2].includes(o.ganador);
+}
+
+function tableroDesde(o) {
+    const t = new Tablero();
+    t.celdas = o.celdas.slice();
+    t.turno = o.turno;
+    t.ganador = o.ganador;
+    return t;
+}
+
+// Devuelve true si consiguió reanudar una partida sin terminar.
+function restaurarSesion() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(CLAVE_SESION)); } catch (e) { return false; }
+    if (!s || s.v !== VERSION_SESION || !esTableroValido(s.tablero)) return false;
+
+    // Los ajustes se recuperan aunque la partida guardada ya estuviera
+    // terminada: el marcador y los modos activos siguen siendo válidos.
+    if (Array.isArray(s.marcador) && s.marcador.length === 3 && s.marcador.every(n => Number.isInteger(n) && n >= 0))
+        Estado.marcador = s.marcador;
+    if (s.turnoInicial === 1 || s.turnoInicial === 2) Estado.turnoInicial = s.turnoInicial;
+    if (s.bestOf === 3 || s.bestOf === 5) Estado.bestOf = s.bestOf;
+    if ([10, 15, 30].includes(s.tiempoLimite)) Estado.tiempoLimite = s.tiempoLimite;
+    Estado.modoTorneo = !!s.modoTorneo;
+    Estado.timerActivo = !!s.timerActivo;
+
+    if (s.tablero.ganador !== 0) return false; // terminada: se empieza otra
+
+    Estado.tablero = tableroDesde(s.tablero);
+    Estado.historial = Array.isArray(s.historial)
+        ? s.historial.filter(esTableroValido).map(tableroDesde)
+        : [];
+    return true;
+}
+
 // ── AdMob (cordova-plugin-admob-free) ─────────────────
 const ADMOB_IDS = {
     banner:       'ca-app-pub-8600791204816041/8820270638',
@@ -362,6 +430,21 @@ async function iniciarJuego() {
     Estado.tablero.reset(Estado.turnoInicial);
     Estado.historial = [];
     Estado.esperandoIA = false;
+    guardarSesion();
+    renderTodo();
+
+    if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
+        await jugadaIA();
+    else if (Estado.timerActivo && !Estado.tablero.terminado)
+        iniciarTimer();
+}
+
+// Como iniciarJuego() pero sobre el tablero que acaba de restaurar
+// restaurarSesion(), sin tocarlo: pone en marcha lo que le corresponda al
+// turno recuperado (la IA si le toca, o el reloj si estaba activo).
+async function reanudarJuego() {
+    Estado.generacion++;
+    Estado.esperandoIA = false;
     renderTodo();
 
     if (!Estado.tablero.terminado && esIA(Estado.tablero.turno))
@@ -383,6 +466,7 @@ async function onCeldaClick(celda) {
     cancelarTimer();
     guardarHistorial();
     Estado.tablero.hacerJugada(celda);
+    guardarSesion();
     playSound('colocar');
     renderTablero();
     renderJugadores();
@@ -418,6 +502,7 @@ async function jugadaIA() {
     }
 
     Estado.esperandoIA = false;
+    guardarSesion();
     playSound('colocar');
     renderTablero();
     renderJugadores();
@@ -442,6 +527,7 @@ async function refrescarEstado() {
     else                                    { Estado.marcador[0]++; Estado.estadisticas.tablas++; }
     Estado.estadisticas.jugadas++;
     guardarPref('Estadisticas', JSON.stringify(Estado.estadisticas));
+    guardarSesion();
 
     renderMarcador();
     renderLineaGanadora();
@@ -580,6 +666,7 @@ async function onNivelChange(val) {
 
 function resetMarcador() {
     Estado.marcador = [0, 0, 0];
+    guardarSesion();
     renderMarcador();
 }
 
@@ -594,6 +681,7 @@ async function deshacerJugada() {
         Estado.tablero = Estado.historial.pop();
         if (!esIA(Estado.tablero.turno)) break;
     }
+    guardarSesion();
     renderTodo();
     if (Estado.timerActivo) iniciarTimer();
 }
@@ -661,6 +749,7 @@ async function tiempoAgotado() {
     const gen = Estado.generacion;
     guardarHistorial();
     Estado.tablero.hacerJugada(libres[Math.floor(Math.random() * libres.length)]);
+    guardarSesion();
     playSound('colocar');
     renderTablero();
     renderJugadores();
@@ -672,6 +761,7 @@ async function tiempoAgotado() {
 
 async function toggleTimer() {
     Estado.timerActivo = !Estado.timerActivo;
+    guardarSesion();
     renderExtras();
     if (Estado.timerActivo && !Estado.tablero.terminado && !esIA(Estado.tablero.turno) && !Estado.esperandoIA)
         iniciarTimer();
@@ -683,6 +773,7 @@ async function toggleTimer() {
 
 function onTiempoLimiteChange(val) {
     Estado.tiempoLimite = parseInt(val);
+    guardarSesion();
     if (Estado.timerActivo && !Estado.tablero.terminado && !esIA(Estado.tablero.turno) && !Estado.esperandoIA) {
         cancelarTimer();
         iniciarTimer();
@@ -692,6 +783,7 @@ function onTiempoLimiteChange(val) {
 // ── Torneo ─────────────────────────────────────────────
 async function toggleTorneo() {
     Estado.modoTorneo = !Estado.modoTorneo;
+    guardarSesion();
     if (Estado.modoTorneo) { Estado.marcador = [0, 0, 0]; Estado.turnoInicial = 1; renderMarcador(); }
     renderExtras();
     if (Estado.modoTorneo) await iniciarJuego();
@@ -699,6 +791,7 @@ async function toggleTorneo() {
 
 function onBestOfChange(val) {
     Estado.bestOf = parseInt(val);
+    guardarSesion();
     if (Estado.modoTorneo && (Estado.marcador[1] >= metaTorneo() || Estado.marcador[2] >= metaTorneo())) {
         Estado.marcador = [0, 0, 0];
         Estado.turnoInicial = 1;
@@ -838,6 +931,7 @@ function onBackButton() {
 
 function onAppPause() {
     Estado.appEnPausa = true;
+    guardarSesion();
     pausarTimer();
 }
 
@@ -902,20 +996,22 @@ document.addEventListener('DOMContentLoaded', () => {
     aplicarIdioma();
 });
 
-document.addEventListener('deviceready', async () => {
+// Arranque común a Cordova y navegador: si había una partida a medias se
+// reanuda, y si no se empieza una nueva.
+async function arrancar() {
     cargarPrefs();
     crearCeldasDOM();
     bindEvents();
-    await iniciarJuego();
+    if (restaurarSesion()) await reanudarJuego();
+    else await iniciarJuego();
+}
+
+document.addEventListener('deviceready', async () => {
+    await arrancar();
     initAdMob();
 }, false);
 
 // Fallback para pruebas en navegador de escritorio
 if (!window.cordova) {
-    window.addEventListener('load', async () => {
-        cargarPrefs();
-        crearCeldasDOM();
-        bindEvents();
-        await iniciarJuego();
-    });
+    window.addEventListener('load', arrancar);
 }

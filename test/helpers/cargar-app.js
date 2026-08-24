@@ -13,27 +13,42 @@ const { cargarJuego } = require('./cargar-juego');
 
 const RUTA_APP = path.join(__dirname, '..', '..', 'www', 'js', 'app.js');
 
-function cargarApp() {
+// localStorage de mentira con memoria, para poder probar el guardado y la
+// restauración de la sesión sin un navegador.
+function almacenFalso(inicial) {
+    const datos = Object.assign({}, inicial);
+    return {
+        datos,
+        getItem: (k) => (k in datos ? datos[k] : null),
+        setItem: (k, v) => { datos[k] = String(v); }
+    };
+}
+
+function cargarApp(prefsIniciales) {
     const { Tablero, Juego } = cargarJuego();
     const codigo = fs.readFileSync(RUTA_APP, 'utf8');
     const noop = () => {};
+    const almacen = almacenFalso(prefsIniciales);
 
     const fabrica = new Function(
         'Tablero', 'Juego', 'document', 'window', 'localStorage', 'navigator',
         't', 'aplicarIdioma', 'playSound', 'setSoundVolume', 'setSoundMuted',
-        codigo + '\n;return { Estado, puedeDeshacer, esIA, hayIA, guardarHistorial };'
+        codigo + '\n;return { Estado, puedeDeshacer, esIA, hayIA, guardarHistorial,'
+               + ' guardarSesion, restaurarSesion, CLAVE_SESION };'
     );
 
-    return fabrica(
+    const app = fabrica(
         Tablero,
         Juego,
         { addEventListener: noop },
         { addEventListener: noop },   // sin window.cordova: toma el camino de navegador
-        { getItem: () => null, setItem: noop },
+        almacen,
         { language: 'es' },
         (clave) => clave,
         noop, noop, noop, noop
     );
+    app.almacen = almacen;
+    return app;
 }
 
 module.exports = { cargarApp };

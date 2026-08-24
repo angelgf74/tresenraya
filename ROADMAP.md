@@ -320,8 +320,19 @@ arreglarlos.
       (el de `puedeDeshacer` que trajo R3-P0), porque el resto llama a `getElementById` en cada
       paso. Separar la lógica de estado del renderizado permitiría probar de verdad los flujos
       donde han aparecido los dos bugs de esta ronda
-- [ ] **La partida en curso no sobrevive al cierre de la app** — solo persisten preferencias y
-      estadísticas; cerrar a media partida la pierde. Guardar tablero, turno y marcador en `pause`
+- [x] **La partida en curso no sobrevivía al cierre de la app** — solo persistían preferencias y
+      estadísticas: cerrar a media partida la perdía, junto con el marcador y los modos de torneo
+      y temporizador, que tampoco se guardaban. Nueva clave `Sesion` en `localStorage` con
+      tablero, historial de deshacer, turno inicial, marcador y esos modos, versionada para que un
+      cambio de formato futuro se descarte en vez de reventar el arranque. Se guarda tras cada
+      jugada y en `pause` (no solo en `pause`: un cierre forzado no siempre lo dispara), y
+      `arrancar()` reanuda si había partida a medias. Todo lo que se lee se valida pieza a pieza:
+      una sesión corrupta, incompleta o de otra versión cae a partida limpia. Si al reanudar le
+      toca a la IA, mueve ella; si el reloj estaba activo, arranca.
+      Cinco tests nuevos (`test/sesion.test.js`), incluido que el historial recuperado sean
+      tableros de verdad y no objetos planos —que reventarían al deshacer— y que una partida ya
+      terminada no se reanude pero sí conserve marcador y modos. Verificado además en el navegador
+      comparando el estado antes de cerrar y al volver a abrir: idéntico, con Deshacer disponible
 - [ ] **Estadísticas poco informativas** — cuentan por símbolo (X/O), no distinguen si ganó el
       humano o la IA, ni por nivel de dificultad
 - [ ] **Torneo: bajar el "mejor de" con el torneo ya ganado** lo reinicia en silencio, sin declarar
