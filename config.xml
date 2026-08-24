@@ -35,9 +35,9 @@
         <icon density="xxhdpi" src="res/icon/android/legacy-xxhdpi.png" background="res/icon/android/background-xxhdpi.png" foreground="res/icon/android/foreground-xxhdpi.png" />
         <icon density="xxxhdpi" src="res/icon/android/legacy-xxxhdpi.png" background="res/icon/android/background-xxxhdpi.png" foreground="res/icon/android/foreground-xxxhdpi.png" />
 
-        <!-- Pantalla de carga: icono de la app sobre fondo del gradiente de marca -->
+        <!-- Pantalla de carga: icono de la app sobre el papel cálido del rediseño (R2-P7) -->
         <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/splash/android/splash.png" />
-        <preference name="AndroidWindowSplashScreenBackground" value="#0fcfbb" />
+        <preference name="AndroidWindowSplashScreenBackground" value="#FAF7F1" />
     </platform>
     <preference name="DisallowOverscroll" value="true" />
     <preference name="BackupWebStorage" value="local" />

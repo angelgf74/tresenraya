@@ -529,15 +529,23 @@ h1.burning {
 }
 
 .modal-custom-header {
-    font-size: 1.35rem;
+    font-family: 'Bitter', Georgia, serif;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #333;
+    color: #26221B;
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+.modal-custom-header i {
+    color: #B8502E;
 }
 
 .modal-custom-body {
     font-size: 1.1rem;
-    color: #444;
+    color: #4A453B;
     margin-bottom: 1.4rem;
 }
 
