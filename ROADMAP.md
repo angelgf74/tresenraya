@@ -154,11 +154,21 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       (necesitan la app corriendo en dispositivo/emulador); `<name>` de `config.xml` se deja en
       español, coincide con el nombre de la ficha ES y es solo la etiqueta del icono
 
-## R2-P5 — Jugabilidad
+## R2-P5 — Jugabilidad ✔
 
-- [ ] **La IA es completamente determinista** [verificado: 8/8 jugadas idénticas desde la misma
-      posición] — `mejorJugada()` se queda con la primera celda de puntuación máxima, así que la
-      misma partida se repite igual siempre. Elegir al azar entre las jugadas empatadas daría
-      variedad sin tocar la fuerza del motor
-- [ ] **Deshacer de un solo nivel y solo humano vs humano** — guardar una pila de jugadas
-      permitiría deshacer varias y ofrecerlo también contra la IA (retirando las dos últimas)
+- [x] **La IA es completamente determinista** — `mejorJugada()` ahora reúne todas las celdas que
+      empatan a la puntuación máxima y elige una al azar. Para que el empate se detecte bien, cada
+      rama del nivel raíz se evalúa con ventana completa (`-Infinity, Infinity`) en vez de
+      compartir `alpha` entre hermanas: podar con una cota compartida devolvía a veces un valor que
+      solo es una cota (no el valor real minimax), y comparar cotas con `===` habría fallado. Test
+      nuevo: desde el tablero vacío (las 9 aperturas empatan a valor 0 contra rival perfecto),
+      50 llamadas a `mejorJugada` no devuelven siempre la misma celda. La fuerza del motor no
+      cambia — sigue sin perder nunca y las 9 aperturas siguen en tablas contra rival perfecto
+- [x] **Deshacer de un solo nivel y solo humano vs humano** — `Estado.tableroAnterior` (una sola
+      posición) pasa a `Estado.historial` (pila), con `guardarHistorial()` antes de cada jugada
+      (humana, de la IA y por timeout). `deshacerJugada()` ahora también funciona contra la IA:
+      hace `pop()` en bucle mientras el tablero recuperado tenga turno de una IA, así una sola
+      pulsación retira la jugada humana y la respuesta de la IA a la vez y deja el turno en manos
+      de un humano; en humano vs humano cada pulsación retira un nivel, y se puede repetir tantas
+      veces como jugadas haya en la pila. Deshabilitado solo cuando no hay ningún jugador humano
+      (`hayHumano()`) o mientras la IA está "pensando" (`Estado.esperandoIA`)

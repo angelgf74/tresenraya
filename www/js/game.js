@@ -76,23 +76,27 @@ const Juego = {
         const libres = tablero.celdasLibres();
         if (libres.length === 0) return -1;
 
+        // Cada rama arranca con ventana completa (-Infinity, Infinity): así el
+        // valor que devuelve _minimax es siempre exacto y las jugadas
+        // empatadas se detectan bien. Compartir alpha entre hermanas (como
+        // antes) podaba alguna a un valor que solo es una cota, no el valor
+        // real, y eso rompía la comparación de empates.
         const aiPlayer = tablero.turno;
         let mejorH = -Infinity;
-        let mejorCelda = libres[0];
-        let alpha = -Infinity;
-        const beta = Infinity;
+        let candidatas = [];
 
         for (const celda of libres) {
             const clon = tablero.clonar();
             clon.hacerJugada(celda);
-            const h = this._minimax(clon, profundidad - 1, false, aiPlayer, alpha, beta);
+            const h = this._minimax(clon, profundidad - 1, false, aiPlayer, -Infinity, Infinity);
             if (h > mejorH) {
                 mejorH = h;
-                mejorCelda = celda;
+                candidatas = [celda];
+            } else if (h === mejorH) {
+                candidatas.push(celda);
             }
-            if (h > alpha) alpha = h;
         }
-        return mejorCelda;
+        return candidatas[Math.floor(Math.random() * candidatas.length)];
     },
 
     _minimax(tablero, profundidad, esMax, aiPlayer, alpha, beta) {

@@ -32,6 +32,17 @@ test('bloquea la victoria inmediata del rival', () => {
     assert.strictEqual(Juego.mejorJugada(t, PERFECTA), 2);
 });
 
+test('con jugadas empatadas, la IA varía la elección en vez de repetir siempre la misma', () => {
+    // Desde el tablero vacío, las 9 aperturas empatan a valor minimax (todas
+    // acaban en tablas contra rival perfecto): si la elección fuera
+    // determinista, la partida se repetiría siempre igual.
+    const elegidas = new Set();
+    for (let i = 0; i < 50; i++) {
+        elegidas.add(Juego.mejorJugada(new Tablero(), PERFECTA));
+    }
+    assert.ok(elegidas.size > 1, `siempre eligió la misma celda: ${[...elegidas]}`);
+});
+
 test('juego perfecto contra juego perfecto siempre acaba en tablas', () => {
     // Sin primera jugada forzada y con cada una de las nueve aperturas
     const libre = jugarPartidaIA(Tablero, Juego, PERFECTA, PERFECTA);

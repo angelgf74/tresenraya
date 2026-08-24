@@ -6,7 +6,7 @@ const Estado = {
     turnoInicial: 1,
     esperandoIA: false,
     tipoJugador: [0, 1], // 0=humano, 1=IA
-    tableroAnterior: null,
+    historial: [], // pila de tableros previos a cada jugada, para deshacer
     tema: 'claro',
     volumen: 80,
     silenciado: false,
@@ -36,10 +36,13 @@ const Estado = {
 
 // ── Helpers ────────────────────────────────────────────
 const hayIA       = () => Estado.tipoJugador[0] === 1 || Estado.tipoJugador[1] === 1;
+const hayHumano   = () => Estado.tipoJugador[0] === 0 || Estado.tipoJugador[1] === 0;
 const esIA        = (jug) => Estado.tipoJugador[jug - 1] === 1;
-const puedeDeshacer = () => !hayIA() && Estado.tableroAnterior !== null && !Estado.tablero.terminado;
+const puedeDeshacer = () => hayHumano() && Estado.historial.length > 0 &&
+    !Estado.tablero.terminado && !Estado.esperandoIA;
 const metaTorneo  = () => Math.ceil(Estado.bestOf / 2);
 const delay       = (ms) => new Promise(r => setTimeout(r, ms));
+const guardarHistorial = () => Estado.historial.push(Estado.tablero.clonar());
 
 // ── Persistencia ───────────────────────────────────────
 function cargarPrefs() {
@@ -321,7 +324,7 @@ function moverFocoCelda(desde, paso) {
 async function iniciarJuego() {
     cancelarTimer();
     Estado.tablero.reset(Estado.turnoInicial);
-    Estado.tableroAnterior = null;
+    Estado.historial = [];
     Estado.esperandoIA = false;
     renderTodo();
 
@@ -341,7 +344,7 @@ async function onCeldaClick(celda) {
         return;
 
     cancelarTimer();
-    Estado.tableroAnterior = Estado.tablero.clonar();
+    guardarHistorial();
     Estado.tablero.hacerJugada(celda);
     playSound('colocar');
     renderTablero();
@@ -364,7 +367,10 @@ async function jugadaIA() {
     await delay(380);
 
     const celda = Juego.mejorJugada(Estado.tablero, Estado.nivel);
-    if (celda >= 0) Estado.tablero.hacerJugada(celda);
+    if (celda >= 0) {
+        guardarHistorial();
+        Estado.tablero.hacerJugada(celda);
+    }
 
     Estado.esperandoIA = false;
     playSound('colocar');
@@ -528,11 +534,16 @@ function resetMarcador() {
     renderMarcador();
 }
 
+// Contra la IA, un tablero de historial de cada dos corresponde a "antes de
+// que la IA mueva" (con turno de IA); esos se saltan para que un solo
+// Deshacer retire la jugada humana y la respuesta de la IA a la vez y deje
+// el turno en manos de un humano.
 async function deshacerJugada() {
     if (!puedeDeshacer()) return;
     cancelarTimer();
-    Estado.tablero = Estado.tableroAnterior;
-    Estado.tableroAnterior = null;
+    do {
+        Estado.tablero = Estado.historial.pop();
+    } while (Estado.historial.length > 0 && esIA(Estado.tablero.turno));
     renderTodo();
     if (Estado.timerActivo) iniciarTimer();
 }
@@ -597,7 +608,7 @@ async function tiempoAgotado() {
     if (Estado.tablero.terminado || esIA(Estado.tablero.turno)) return;
     const libres = Estado.tablero.celdasLibres();
     if (libres.length === 0) return;
-    Estado.tableroAnterior = Estado.tablero.clonar();
+    guardarHistorial();
     Estado.tablero.hacerJugada(libres[Math.floor(Math.random() * libres.length)]);
     playSound('colocar');
     renderTablero();
