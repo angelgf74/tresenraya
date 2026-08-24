@@ -242,14 +242,17 @@ function renderLineaGanadora() {
 
     if (!linea) { svg.style.display = 'none'; return; }
 
+    // De centro de celda extrema a borde del tablero: cada centro ya está a
+    // 0.5 de su borde exterior, así que solo hay que alargar la línea otro
+    // 0.5 (no 1, que la sacaba media celda fuera del tablero).
     const idx1 = linea[0], idx2 = linea[2];
     let x1 = idx1 % 3 + 0.5, y1 = Math.floor(idx1 / 3) + 0.5;
     let x2 = idx2 % 3 + 0.5, y2 = Math.floor(idx2 / 3) + 0.5;
 
-    if (x1 < x2) { x1 -= 1; x2 += 1; }
-    else if (x1 > x2) { x1 += 1; x2 -= 1; }
-    if (y1 < y2) { y1 -= 1; y2 += 1; }
-    else if (y1 > y2) { y1 += 1; y2 -= 1; }
+    if (x1 < x2) { x1 -= 0.5; x2 += 0.5; }
+    else if (x1 > x2) { x1 += 0.5; x2 -= 0.5; }
+    if (y1 < y2) { y1 -= 0.5; y2 += 0.5; }
+    else if (y1 > y2) { y1 += 0.5; y2 -= 0.5; }
 
     const el = document.getElementById('lineaEl');
     el.setAttribute('x1', x1.toFixed(2));
