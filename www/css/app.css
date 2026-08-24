@@ -1,32 +1,51 @@
-/* ── Variables de tema ── */
+/* ── Variables de tema ──
+   Dirección "minimalista editorial": papel cálido en vez del gradiente
+   turquesa/glossy original, tinta en vez de blanco, un acento por ficha
+   (terracota para X, verde azulado para O) en vez del ámbar de marca. */
 :root {
-    --bg:                linear-gradient(160deg, #17c9b4 0%, #0b9e8e 100%);
-    --titulo-grad:       linear-gradient(135deg, #ffffff 0%, #ffd54f 45%, #ffffff 100%);
-    --tablero-gap:       rgba(0,0,0,.35);
-    --celda-bg:          #fff;
-    --celda-hover:       #f0fdf8;
-    --marcador-bg:       rgba(0,0,0,.2);
-    --jugador-activo-bg: rgba(255,255,255,.12);
-    --sinturno-color:    rgba(255,255,255,.28);
-    --pensando-color:    rgba(255,255,255,.75);
-    --nivel-bg:          rgba(255,255,255,.15);
-    --nivel-border:      rgba(255,255,255,.4);
-    --nivel-focus:       rgba(255,255,255,.25);
+    --bg:                linear-gradient(180deg, #FAF7F1 0%, #F2ECE0 100%);
+    --ink:                #26221B;
+    --ink-suave:          #7A7364;
+    --titulo-color:       #26221B;
+    --card:               #FFFFFF;
+    --line:               #E4DDCE;
+    --wash:               rgba(38,34,27,.05);
+    --wash-fuerte:        rgba(38,34,27,.10);
+    --tablero-gap:        #E4DDCE;
+    --celda-bg:           #FFFFFF;
+    --celda-hover:        #F5F0E5;
+    --marcador-bg:        #FFFFFF;
+    --jugador-activo-bg:  #FFFFFF;
+    --sinturno-color:     #C4BCAA;
+    --pensando-color:     #8B8474;
+    --nivel-bg:           #FFFFFF;
+    --nivel-border:       #E4DDCE;
+    --nivel-focus:        #D8CFB8;
+    --acento-x:           #B8502E;
+    --acento-o:           #3E6E63;
 }
 
 html[data-tema="oscuro"] {
-    --bg:                linear-gradient(160deg, #1a1a2e 0%, #16213e 100%);
-    --titulo-grad:       linear-gradient(135deg, #74ebd5 0%, #ffd54f 45%, #74ebd5 100%);
-    --tablero-gap:       rgba(0,0,0,.65);
-    --celda-bg:          #1e2230;
-    --celda-hover:       #262a3f;
-    --marcador-bg:       rgba(0,0,0,.38);
-    --jugador-activo-bg: rgba(255,255,255,.07);
-    --sinturno-color:    rgba(255,255,255,.2);
-    --pensando-color:    rgba(255,255,255,.55);
-    --nivel-bg:          rgba(255,255,255,.08);
-    --nivel-border:      rgba(255,255,255,.22);
-    --nivel-focus:       rgba(255,255,255,.14);
+    --bg:                linear-gradient(180deg, #1B1914 0%, #131210 100%);
+    --ink:                #F1ECE1;
+    --ink-suave:          #A79D87;
+    --titulo-color:       #F1ECE1;
+    --card:               #221F19;
+    --line:               rgba(255,255,255,.10);
+    --wash:               rgba(241,236,225,.06);
+    --wash-fuerte:        rgba(241,236,225,.12);
+    --tablero-gap:        rgba(255,255,255,.10);
+    --celda-bg:           #221F19;
+    --celda-hover:        #2B2720;
+    --marcador-bg:        #221F19;
+    --jugador-activo-bg:  #2B2720;
+    --sinturno-color:     rgba(241,236,225,.3);
+    --pensando-color:     rgba(241,236,225,.6);
+    --nivel-bg:           #221F19;
+    --nivel-border:       rgba(255,255,255,.16);
+    --nivel-focus:        rgba(255,255,255,.22);
+    --acento-x:           #D9835E;
+    --acento-o:           #6FA99B;
 }
 
 /* ── Base ── */
@@ -46,8 +65,8 @@ html, body {
 body {
     background: var(--bg);
     min-height: 100vh;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    color: #fff;
+    font-family: 'Work Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
     /* Espacio seguro para muescas y barra de navegación Android */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -82,16 +101,13 @@ body {
 h1.burning {
     flex: 1 1 auto;
     min-width: 0;
-    font-family: 'Arial Narrow', Arial, sans-serif;
-    font-weight: 900;
+    font-family: 'Bitter', Georgia, serif;
+    font-weight: 800;
     font-size: clamp(1.8rem, 9vw, 2.8rem);
     text-align: center;
     margin: 0;
-    background: var(--titulo-grad);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 0.03em;
+    color: var(--titulo-color);
+    letter-spacing: -0.01em;
     line-height: 1.1;
 }
 
@@ -112,39 +128,37 @@ h1.burning {
 #btnTema {
     flex: 0 0 auto;
     font-size: 1.2rem;
-    color: rgba(255,255,255,.6);
+    color: var(--ink-suave);
     padding: 0.5rem;
     transition: color .2s;
 }
-#btnTema:active { color: #fff; }
+#btnTema:active { color: var(--ink); }
 
 #btnAyuda {
     flex: 0 0 auto;
     font-size: 1.4rem;
-    color: rgba(255,255,255,.6);
+    color: var(--ink-suave);
     padding: 0.5rem;
     transition: color .2s;
 }
-#btnAyuda:active { color: #fff; }
+#btnAyuda:active { color: var(--ink); }
 
 /* ── Foco visible (WCAG 2.4.7) ──
    Solo :focus-visible, asi el anillo aparece navegando con teclado pero no
    al tocar la pantalla. */
 :focus-visible {
-    outline: 3px solid #ffd54f;
+    outline: 3px solid var(--acento-x);
     outline-offset: 2px;
     border-radius: 4px;
 }
-/* Las celdas son claras u oscuras segun el tema; el ambar no contrasta sobre
-   blanco, asi que usan el turquesa de marca por dentro del borde. */
 .celda:focus-visible {
-    outline: 3px solid #17c9b4;
+    outline: 3px solid var(--ink);
     outline-offset: -4px;
 }
 
 /* ── Fichas (colores globales) ── */
-.fa-times  { color: #e74c3c; }
-.fa-circle { color: #3498db; }
+.fa-times  { color: var(--acento-x); }
+.fa-circle { color: var(--acento-o); }
 
 /* ── Animación de entrada de ficha ── */
 @keyframes fichaEntrada {
@@ -168,7 +182,7 @@ h1.burning {
 .vol-row #btnVolumen {
     font-size: 1rem;
     cursor: pointer;
-    color: #fff;
+    color: var(--ink);
     width: 1.2rem;
     text-align: center;
     flex-shrink: 0;
@@ -179,7 +193,7 @@ h1.burning {
 .vol-slider {
     width: 90px;
     height: 4px;
-    accent-color: #fff;
+    accent-color: var(--ink);
     cursor: pointer;
     vertical-align: middle;
 }
@@ -201,6 +215,7 @@ h1.burning {
     gap: 0.15rem;
     padding: 0.5rem 0.25rem;
     border-radius: 14px;
+    border: 1px solid var(--line);
     transition: background .25s;
 }
 
@@ -217,8 +232,7 @@ h1.burning {
 }
 
 .conturno {
-    color: #fff;
-    filter: drop-shadow(0 0 10px rgba(255,255,255,.7));
+    color: var(--ink);
 }
 .sinturno {
     color: var(--sinturno-color);
@@ -238,10 +252,10 @@ h1.burning {
 #txtNivel {
     font-size: 0.85rem;
     padding: 0.35rem 0.5rem;
-    border-radius: 8px;
+    border-radius: 999px;
     border: 1px solid var(--nivel-border);
     background: var(--nivel-bg);
-    color: #fff;
+    color: var(--ink);
     cursor: pointer;
 }
 #txtNivel option { color: #333; background: #fff; }
@@ -259,18 +273,19 @@ h1.burning {
     position: relative;
     width: min(320px, 92vw);
     height: min(320px, 92vw);
-    border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.3);
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 
 .tablero-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: 6px;
+    gap: 8px;
     background: var(--tablero-gap);
-    border: 6px solid var(--tablero-gap);
-    border-radius: 14px;
+    border: 10px solid transparent;
+    border-radius: 20px;
     width: 100%;
     height: 100%;
 }
@@ -282,10 +297,10 @@ h1.burning {
     justify-content: center;
     font-size: min(3.8rem, 20vw);
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: background .15s;
     /* Feedback táctil visual */
-    -webkit-tap-highlight-color: rgba(255,255,255,0.15);
+    -webkit-tap-highlight-color: rgba(0,0,0,0.06);
 }
 .celda:active:not(.bloqueada) {
     background: var(--celda-hover);
@@ -316,8 +331,8 @@ h1.burning {
 
 .btn-deshacer {
     background: none;
-    border: 1px solid rgba(255,255,255,.3);
-    color: rgba(255,255,255,.65);
+    border: 1px solid var(--line);
+    color: var(--ink-suave);
     border-radius: 8px;
     padding: 0.25rem 0.6rem;
     font-size: 0.82rem;
@@ -327,14 +342,14 @@ h1.burning {
     gap: 0.3rem;
 }
 .btn-deshacer:active {
-    background: rgba(255,255,255,.15);
-    color: #fff;
+    background: var(--wash-fuerte);
+    color: var(--ink);
 }
 
 .timer-display {
     font-size: 1.1rem;
     font-weight: 600;
-    color: rgba(255,255,255,.8);
+    color: var(--ink-suave);
 }
 .timer-display.timer-urgente {
     color: #ff6b6b;
@@ -352,13 +367,12 @@ h1.burning {
     justify-content: center;
     gap: 0.6rem;
     margin-top: 0.6rem;
-    opacity: 0.6;
 }
 
 .extra-btn {
-    background: rgba(255,255,255,.1);
-    border: 1px solid rgba(255,255,255,.2);
-    color: rgba(255,255,255,.7);
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink-suave);
     border-radius: 20px;
     padding: 0.32rem 0.8rem;
     font-size: 0.9rem;
@@ -369,13 +383,13 @@ h1.burning {
     transition: background .2s, color .2s;
 }
 .extra-btn:active {
-    background: rgba(255,255,255,.2);
-    color: #fff;
+    background: var(--wash-fuerte);
+    color: var(--ink);
 }
 .extra-btn.on {
-    background: rgba(255,255,255,.22);
-    border-color: rgba(255,255,255,.55);
-    color: #fff;
+    background: var(--wash-fuerte);
+    border-color: var(--ink-suave);
+    color: var(--ink);
     opacity: 1;
 }
 
@@ -393,12 +407,12 @@ h1.burning {
     align-items: center;
     gap: 0.3rem;
     font-size: 0.82rem;
-    color: rgba(255,255,255,.65);
+    color: var(--ink-suave);
 }
 .config-select {
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.28);
-    color: #fff;
+    background: var(--card);
+    border: 1px solid var(--line);
+    color: var(--ink);
     border-radius: 6px;
     padding: 0.15rem 0.4rem;
     font-size: 0.82rem;
@@ -407,7 +421,7 @@ h1.burning {
 .config-select option { color: #333; background: #fff; }
 .torneo-score {
     font-weight: 600;
-    color: rgba(255,255,255,.85);
+    color: var(--ink);
 }
 
 /* ── Pensando ── */
@@ -430,7 +444,8 @@ h1.burning {
     display: flex;
     width: 100%;
     background: var(--marcador-bg);
-    border-radius: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
     padding: 0.6rem 0;
 }
 
@@ -448,14 +463,14 @@ h1.burning {
     align-self: center;
     background: transparent;
     border: none;
-    color: rgba(255,255,255,.55);
+    color: var(--ink-suave);
     font-size: 1rem;
     padding: 0 0.6rem;
     cursor: pointer;
 }
 
 .btn-reset-marcador:active {
-    color: #fff;
+    color: var(--ink);
 }
 
 .marcador-icono {
@@ -471,9 +486,10 @@ h1.burning {
 }
 
 .marcador {
+    font-family: 'Bitter', Georgia, serif;
     font-weight: 700;
     font-size: clamp(1.4rem, 7vw, 2rem);
-    color: #fff;
+    color: var(--ink);
     line-height: 1;
 }
 
@@ -536,6 +552,20 @@ h1.burning {
     display: flex;
     justify-content: center;
     gap: 0.6rem;
+}
+
+/* El azul de Bootstrap por defecto desentonaba con la paleta de la app en
+   los botones de los modales; los modales son siempre claros (no dependen
+   de --acento-x, que cambia con el tema), así que aquí van fijos. */
+.modal-custom-footer .btn-primary {
+    background-color: #B8502E;
+    border-color: #B8502E;
+}
+.modal-custom-footer .btn-primary:hover,
+.modal-custom-footer .btn-primary:focus,
+.modal-custom-footer .btn-primary:active {
+    background-color: #9C4325 !important;
+    border-color: #9C4325 !important;
 }
 
 /* ── Movimiento reducido ──
@@ -625,7 +655,7 @@ h1.burning {
 .ayuda-seccion h3 {
     font-size: 1rem;
     font-weight: 700;
-    color: #17c9b4;
+    color: #3E6E63;
     margin: 0 0 0.4rem;
     display: flex;
     align-items: center;
@@ -643,8 +673,8 @@ h1.burning {
 }
 .ayuda-lista li { margin-bottom: 0.2rem; }
 
-.ayuda-x { color: #e74c3c; }
-.ayuda-o { color: #3498db; }
+.ayuda-x { color: #B8502E; }
+.ayuda-o { color: #3E6E63; }
 
 /* ── Pantallas muy pequeñas ── */
 @media (max-width: 360px) {
