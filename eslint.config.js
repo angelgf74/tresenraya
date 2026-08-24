@@ -41,7 +41,6 @@ module.exports = [
                 playSound: 'readonly',      // sounds.js
                 setSoundVolume: 'readonly', // sounds.js
                 setSoundMuted: 'readonly',  // sounds.js
-                setTema: 'readonly',        // sounds.js
                 t: 'readonly',              // i18n.js
                 aplicarIdioma: 'readonly',  // i18n.js
                 TRADUCCIONES: 'readonly',   // i18n.js

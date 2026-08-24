@@ -40,7 +40,6 @@ window.playSound = (function () {
 
     window.setSoundVolume = function (v) { _volume = Math.max(0, Math.min(1, v)); };
     window.setSoundMuted  = function (m) { _muted = !!m; };
-    window.setTema        = function (t) { document.documentElement.setAttribute('data-tema', t); };
 
     return function (name) {
         try { if (sounds[name]) sounds[name](); }

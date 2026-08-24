@@ -284,27 +284,36 @@ arreglarlos.
       `play-services-ads` 11.0.4, que se fuerza a 23.6.0). Con targetSdk 37 esto acabará rompiendo.
       Salida: migrar a `admob-plus-cordova`
 - [ ] **Ficha de Play** — declarar el `AD_ID` (ya presente en el manifiesto) en el formulario de
-      seguridad de los datos y enlazar política de privacidad. Capturas rehechas: cinco en
+      seguridad de los datos y enlazar política de privacidad. Capturas rehechas: seis en
       español en `store/capturas/`, del dispositivo real y recortadas a 1220×2440 (2:1, el máximo
       que admite Play; la captura en crudo es 2,22:1 y se rechazaría). Falta el set en inglés
-- [ ] **Con el modo torneo o el temporizador activos, el contenido desborda la pantalla** — la
-      fila de configuración que aparece debajo de los extras no cabe y queda cortada por el borde
-      inferior, así que el selector de "al mejor de N" y el marcador del torneo quedan a medias.
-      Detectado al preparar las capturas de Play (por eso no hay captura del modo torneo). Es el
-      mismo tipo de problema que R2-P7 resolvió para la fila del título
+- [x] **Con el modo torneo o el temporizador activos, el contenido desbordaba la pantalla** — la
+      fila de configuración que aparece bajo los extras no cabía y quedaba cortada por el borde
+      inferior, dejando a medias el selector de "al mejor de N" y el marcador del torneo.
+      Detectado al preparar las capturas de Play. Medido en el navegador con el ancho y la
+      densidad reales del dispositivo de pruebas (388 px CSS, 777 px de alto útil): el contenido
+      pedía 784 px, desbordaba por 7. Recortado el aire sobrante en seis puntos del ritmo vertical
+      (contenedor, fila de turnos, tablero, tarjetas de jugador, franja bajo el tablero y fila de
+      extras) hasta 768 px, con 9 de holgura; y el tablero pasa a `min(320px, 92vw, 44vh)` para
+      que en pantallas más cortas ceda él antes que amontonar los controles. Verificado en el
+      dispositivo con torneo y temporizador activos a la vez, que es el peor caso
 
 ## R3-P3 — Accesibilidad, limpieza y producto
 
-- [ ] **Contraste** — `--ink-suave` sobre el fondo claro da 4,40:1, justo por debajo del 4,5 de
-      WCAG AA (afecta a Deshacer, temporizador y etiquetas de configuración); oscurecerlo a
-      ~`#6E6758` lo resuelve. El jugador sin turno queda en 1,77:1 (claro) y 2,26:1 (oscuro), casi
-      invisible. Texto principal y fichas van sobrados (14,8:1 y ~5-6:1)
-- [ ] **Objetivos táctiles pequeños** — medidos del árbol de accesibilidad: fila de extras 33 dp,
-      reiniciar marcador 32 dp, control de volumen 7 dp de alto, frente a los 48 dp recomendados
-      (las celdas, en cambio, están en 109 dp)
-- [ ] **Código muerto** — `window.setTema` en `sounds.js`, las variables CSS `--nivel-focus` y
-      `--wash`, y las preferencias `SplashScreenDelay` / `AutoHideSplashScreen` de `config.xml`
-      (cuyo plugin no está instalado)
+- [x] **Contraste** — `--ink-suave` pasa de `#7A7364` (4,40:1, por debajo del 4,5 de WCAG AA) a
+      `#736C5E` (4,87:1); afectaba a Deshacer, temporizador y etiquetas de configuración. El
+      jugador sin turno sube de 1,77:1 a 3,18:1 en claro (`#968A72`) y de 2,26:1 a 3,38:1 en
+      oscuro (alfa .3 → .4): sigue claramente atenuado frente al jugador activo, que es su
+      función, pero ya se distingue. Texto principal y fichas iban sobrados (14,8:1 y ~5-6:1)
+- [x] **Objetivos táctiles pequeños** — el control de volumen pasa de 7 a 24 px de alto (gratis:
+      el alto de la fila lo marca el botón del altavoz) y reiniciar marcador de 32 a 44 px
+      (también gratis, cabe dentro del marcador). La fila de extras sube de 32 a 40 px y no a los
+      48 recomendados a propósito: cada píxel ahí sale de la holgura vertical que acaba de
+      recuperar el arreglo del desbordamiento, y encoger el tablero —el corazón del juego— por
+      unos botones secundarios no compensa. Las celdas siguen en 109 dp
+- [x] **Código muerto** — fuera `window.setTema` de `sounds.js` (y su global en la config de
+      ESLint), las variables CSS `--nivel-focus` y `--wash`, y las preferencias
+      `SplashScreenDelay` / `AutoHideSplashScreen` de `config.xml`, cuyo plugin no está instalado
 - [x] **CSP más estricta** — hecho junto con R3-P1: fuera `'unsafe-eval'`, `media-src *` y todos
       los orígenes de CDN, en la CSP y en los `<access origin>`
 - [ ] **`app.js` sin cobertura real** — 880 líneas con toda la máquina de estados y un único test

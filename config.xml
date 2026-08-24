@@ -40,6 +40,4 @@
     </platform>
     <preference name="DisallowOverscroll" value="true" />
     <preference name="BackupWebStorage" value="local" />
-    <preference name="SplashScreenDelay" value="0" />
-    <preference name="AutoHideSplashScreen" value="true" />
 </widget>

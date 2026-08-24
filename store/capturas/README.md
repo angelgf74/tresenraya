@@ -25,6 +25,7 @@ node recorta-png.js entrada.png salida.png 0 122 1220 2440
 | `es-3-ayuda.png` | Ayuda en español |
 | `es-4-vs-ia.png` | Humano contra IA en nivel Imposible, con Deshacer disponible |
 | `es-5-tema-oscuro.png` | El mismo juego en tema oscuro |
+| `es-6-torneo.png` | Modo torneo, al mejor de 3, con su marcador |
 
 Play pide un mínimo de 2 y admite hasta 8 por idioma. El orden del listado es el
 orden sugerido: la primera es la que más se ve.
@@ -33,6 +34,3 @@ orden sugerido: la primera es la que más se ve.
 
 - **Set en inglés** para la ficha `en-US`. Son las mismas pantallas con el idioma
   cambiado desde el botón de la app; si no se suben, Play reutiliza estas.
-- **Modo torneo**: no hay captura porque con la fila de configuración visible el
-  contenido desborda la pantalla y queda cortado por abajo (ver ronda 3 del
-  ROADMAP). Cuando se arregle, merece una captura propia.
