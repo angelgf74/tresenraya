@@ -79,6 +79,10 @@ h1.burning {
     font-size: clamp(2.4rem, 12vw, 3.8rem);
     text-align: center;
     margin: 0;
+    /* Deja hueco a #btnTema/#btnAyuda (absolutos sobre .titulo-row): sin este
+       padding el título, a tamaños grandes, se dibuja justo debajo o encima
+       de los botones en vez de solo entre ellos. */
+    padding: 0 2.75rem;
     background: var(--titulo-grad);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
