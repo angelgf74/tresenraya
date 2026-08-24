@@ -20,7 +20,12 @@
         <preference name="android-targetSdkVersion" value="37" />
         <preference name="Fullscreen" value="false" />
         <preference name="StatusBarOverlaysWebView" value="false" />
-        <preference name="StatusBarBackgroundColor" value="#0b9e8e" />
+        <!-- Fondo claro del rediseño minimalista (R2-P7); estilo "default" para
+             iconos/hora oscuros, legibles sobre ese fondo claro. El toggle de
+             tema claro/oscuro es solo de la webview: sin cordova-plugin-statusbar
+             no hay forma de recolorear la barra en tiempo real al cambiarlo. -->
+        <preference name="StatusBarBackgroundColor" value="#FAF7F1" />
+        <preference name="StatusBarStyle" value="default" />
 
         <!-- Icono de la app: fallback legado (pre-Android 8) + iconos adaptativos, en un solo <icon> por densidad -->
         <icon density="ldpi" src="res/icon/android/legacy-ldpi.png" background="res/icon/android/background-ldpi.png" foreground="res/icon/android/foreground-ldpi.png" />
