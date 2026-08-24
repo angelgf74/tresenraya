@@ -28,6 +28,7 @@ const Estado = {
 
     // AdMob — contador para mostrar interstitial cada 2 partidas
     partidasJugadas: 0,
+    interstitialPendiente: false,
 
     // Estadísticas históricas (persisten entre reinicios de la app)
     estadisticas: { jugadas: 0, victoriasX: 0, victoriasO: 0, tablas: 0 }
@@ -92,10 +93,16 @@ function initAdMob() {
         bannerAtTop: false,
         overlap: true
     });
-    admob.banner.prepare();
+    admob.banner.prepare().catch(() => {});
 
-    // Espacio para que el banner no tape el contenido
-    document.querySelector('.game-container').style.paddingBottom = 'calc(2rem + 60px)';
+    // El hueco para el banner solo se reserva si realmente carga; si no,
+    // queda un espacio muerto permanente al pie del tablero.
+    document.addEventListener('admob.banner.events.LOAD', () => {
+        document.querySelector('.game-container').style.paddingBottom = 'calc(2rem + 60px)';
+    });
+    document.addEventListener('admob.banner.events.LOAD_FAIL', () => {
+        document.querySelector('.game-container').style.paddingBottom = '';
+    });
 
     // Precargar interstitial y recargarlo al cerrarse
     precargarInterstitial();
@@ -109,12 +116,22 @@ function precargarInterstitial() {
         isTesting: !!window.APP_DEBUG,
         autoShow: false
     });
-    admob.interstitial.prepare();
+    // Un fallo de carga (sin red, sin relleno) no debe volcarse como una
+    // promesa rechazada sin capturar; sencillamente no habrá anuncio listo.
+    admob.interstitial.prepare().catch(() => {});
 }
 
-function mostrarInterstitial() {
+// mostrarInterstitial() devuelve la promesa real de admob.interstitial.show(),
+// que antes se perdía: mostrarInterstitial() no devolvía nada y el
+// `await mostrarInterstitial()` de quien la llamaba esperaba undefined.
+async function mostrarInterstitial() {
     if (typeof admob === 'undefined') return;
-    admob.interstitial.show();
+    try {
+        const listo = await admob.interstitial.isReady();
+        if (listo) await admob.interstitial.show();
+    } catch (e) {
+        // Sin anuncio cargado o SDK sin responder: se sigue sin anuncio.
+    }
 }
 
 // ── Renderizado ────────────────────────────────────────
@@ -375,18 +392,17 @@ async function refrescarEstado() {
 
     await delay(1600);
 
+    // Cada 2 partidas terminadas toca interstitial, pero se muestra al aceptar
+    // el modal (ver aceptarModal/aceptarModalTorneo): lanzarlo aquí, justo
+    // después de abrir el modal de resultado, lo tapaba.
+    Estado.partidasJugadas++;
+    Estado.interstitialPendiente = Estado.partidasJugadas % 2 === 0;
+
     if (Estado.modoTorneo && (Estado.marcador[1] >= metaTorneo() || Estado.marcador[2] >= metaTorneo())) {
         Estado.ganadorTorneo = Estado.marcador[1] >= metaTorneo() ? 1 : 2;
         abrirModalTorneo();
     } else {
         abrirModalPartida();
-    }
-
-    // Interstitial cada 2 partidas terminadas
-    Estado.partidasJugadas++;
-    if (Estado.partidasJugadas % 2 === 0) {
-        await delay(400);
-        await mostrarInterstitial();
     }
 }
 
@@ -421,10 +437,19 @@ function abrirModalTorneo() {
     alAbrirModal('modalTorneo');
 }
 
+// Se dispara al aceptar el modal (partida o torneo) en vez de justo al abrirlo,
+// para no tapar el resultado con el anuncio.
+async function mostrarInterstitialPendiente() {
+    if (!Estado.interstitialPendiente) return;
+    Estado.interstitialPendiente = false;
+    await mostrarInterstitial();
+}
+
 async function aceptarModal() {
     document.getElementById('modalBackdrop').style.display = 'none';
     document.getElementById('modalPartida').style.display  = 'none';
     alCerrarModal();
+    await mostrarInterstitialPendiente();
     await delay(600);
     await nuevoJuego();
 }
@@ -435,6 +460,7 @@ async function aceptarModalTorneo() {
     alCerrarModal();
     Estado.marcador = [0, 0, 0];
     Estado.turnoInicial = 1;
+    await mostrarInterstitialPendiente();
     await delay(600);
     await iniciarJuego();
 }

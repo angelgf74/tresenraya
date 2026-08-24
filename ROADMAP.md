@@ -115,25 +115,28 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       reportan como `no-undef`. La instalación se hizo tras un `--dry-run` que confirmó que solo
       añadía paquetes; verificado después que `plugins/` y `platforms/` quedaron intactos
 
-## R2-P3 — Limpieza y robustez
+## R2-P3 — Limpieza y robustez ✔
 
-- [ ] **Restos de la plantilla Cordova empaquetados en el APK** [verificado: no referenciados] —
-      `www/js/index.js` (busca un `#deviceready` que ya no existe en el HTML), `www/css/index.css`
-      y `www/img/logo.png` (~26 KB). `shrinkResources` no toca `assets/www/`, así que viajan en el
-      release. Borrar los tres
-- [ ] **Metadatos de `package.json` sin personalizar** — `description` sigue siendo "A sample
-      Apache Cordova application that responds to the deviceready event", `author` es "Apache
-      Cordova Team", `main` apunta a `index.js` (el fichero muerto de arriba) y `version` es
-      `1.0.0` mientras `config.xml` va por `1.0.24`
-- [ ] **`admob.interstitial.show()` sin comprobación ni captura de errores** — no se verifica que
-      haya anuncio cargado y no hay `.catch()`, así que un fallo de carga produce una promesa
-      rechazada sin manejar. Además `await mostrarInterstitial()` espera algo que no es una
-      promesa (`mostrarInterstitial` no devuelve nada): el `await` no hace nada
-- [ ] **Hueco del banner aunque el banner no cargue** — `initAdMob()` aplica
-      `paddingBottom: calc(2rem + 60px)` al contenedor sin esperar al evento de carga; si el
-      anuncio nunca aparece, queda un espacio muerto permanente al pie
-- [ ] **Interstitial encima del modal de resultado** — se lanza 400 ms después de abrir el modal
-      de fin de partida, tapándolo. Mejor mostrarlo al aceptar el modal, antes de la nueva partida
+- [x] **Restos de la plantilla Cordova empaquetados en el APK** — confirmado por `grep` que nada
+      los referenciaba y borrados `www/js/index.js`, `www/css/index.css` y `www/img/logo.png`
+      (carpeta `img/` eliminada al quedar vacía)
+- [x] **Metadatos de `package.json` sin personalizar** — `description` y `author` actualizados,
+      `version` sincronizada con `config.xml` (`1.0.24`), quitado `"main": "index.js"` (apuntaba al
+      fichero muerto de arriba; nada hacía `require()` del paquete)
+- [x] **`admob.interstitial.show()` sin comprobación ni captura de errores** — `mostrarInterstitial()`
+      ahora es `async`, comprueba `isReady()` antes de `show()` y captura errores de ambas
+      llamadas; `precargarInterstitial()` también captura el `prepare()`. Verificado con un mock de
+      `admob`: `isReady()=false` no llama a `show()`, `show()` rechazada no rompe la cadena, y cero
+      `unhandledrejection` en los tres casos
+- [x] **Hueco del banner aunque el banner no cargue** — el `paddingBottom` ya no se aplica al
+      llamar a `prepare()`, sino en el evento `admob.banner.events.LOAD`; `LOAD_FAIL` lo retira.
+      Verificado con el mock: sin evento `LOAD` no hay hueco, y `LOAD_FAIL` posterior a un `LOAD` lo
+      limpia
+- [x] **Interstitial encima del modal de resultado** — ya no se dispara a los 400 ms de abrir el
+      modal; `refrescarEstado()` solo marca `Estado.interstitialPendiente`, y
+      `aceptarModal()`/`aceptarModalTorneo()` lo consumen al aceptar, antes de la partida nueva.
+      Verificado: el modal de resultado permanece visible sin interstitial encima, y el anuncio se
+      dispara justo al pulsar Aceptar
 
 ## R2-P4 — Remates de i18n (derivados de la ronda 1)
 
