@@ -284,8 +284,14 @@ arreglarlos.
       `play-services-ads` 11.0.4, que se fuerza a 23.6.0). Con targetSdk 37 esto acabará rompiendo.
       Salida: migrar a `admob-plus-cordova`
 - [ ] **Ficha de Play** — declarar el `AD_ID` (ya presente en el manifiesto) en el formulario de
-      seguridad de los datos, enlazar política de privacidad, y rehacer las capturas, que siguen
-      mostrando el diseño turquesa anterior al rediseño
+      seguridad de los datos y enlazar política de privacidad. Capturas rehechas: cinco en
+      español en `store/capturas/`, del dispositivo real y recortadas a 1220×2440 (2:1, el máximo
+      que admite Play; la captura en crudo es 2,22:1 y se rechazaría). Falta el set en inglés
+- [ ] **Con el modo torneo o el temporizador activos, el contenido desborda la pantalla** — la
+      fila de configuración que aparece debajo de los extras no cabe y queda cortada por el borde
+      inferior, así que el selector de "al mejor de N" y el marcador del torneo quedan a medias.
+      Detectado al preparar las capturas de Play (por eso no hay captura del modo torneo). Es el
+      mismo tipo de problema que R2-P7 resolvió para la fila del título
 
 ## R3-P3 — Accesibilidad, limpieza y producto
 
