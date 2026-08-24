@@ -194,3 +194,26 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       perfecto) sean reproducibles y no intermitentes. Verificado: Fácil pierde más que Medio, que
       pierde más que Difícil, que pierde más que Imposible (0 derrotas); y que `soloNoPerdedoras`
       realmente excluye jugadas perdedoras cuando está activo
+
+## R2-P7 — Rediseño visual ✔
+
+- [x] **Título solapado con los botones de tema/ayuda** — `.titulo-row` pasa de botones
+      `position:absolute` sobre un `h1` a ancho completo a un layout flex: los botones reservan su
+      hueco real y el título usa como máximo el ancho que sobra entre ambos
+- [x] **Scroll vertical no deseado** — menos padding arriba/abajo en `.game-container`, quitado el
+      padding-top que la media query de "pantallas grandes" añadía de más en la mayoría de móviles,
+      y clamp de fuente del título reducido para que quepa en una línea con el hueco de los botones
+      ya reservado. Verificado: capturas antes/después de un swipe salen idénticas (nada que
+      desplazar)
+- [x] **Rediseño minimalista editorial** — explorado antes como maqueta en un canvas de diseño (3
+      direcciones: minimalista, lúdico arcade, oscuro premium); elegida la minimalista. Sustituye
+      el gradiente turquesa/glossy original por papel cálido (oscuro: negro cálido), un acento por
+      ficha (terracota X, verde azulado O) en vez del ámbar de marca, Bitter (serif) para títulos y
+      marcador, Work Sans para el resto, tarjetas de borde fino en vez de sombras pesadas. Aplicado
+      también a la pantalla de carga, la barra de estado de Android (estática — sin
+      `cordova-plugin-statusbar` no puede seguir el toggle claro/oscuro en tiempo real) y las
+      cabeceras de los cuatro modales (resultado, torneo, estadísticas, ayuda)
+- [x] **Línea de la jugada ganadora se salía del tablero** — `renderLineaGanadora()` la alargaba 1
+      unidad completa más allá del centro de cada celda extrema (el centro ya está a 0.5 de su
+      borde, así que sobraba media celda por lado, muy visible en diagonales). Alargada 0.5 en su
+      lugar; verificado en dispositivo que ahora termina justo en el borde del tablero
