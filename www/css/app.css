@@ -61,28 +61,32 @@ body {
     max-width: 440px;
     width: 100%;
     margin: 0 auto;
-    padding: 1rem 1rem 2rem;
+    padding: 0.5rem 1rem 0.75rem;
     min-height: 100vh;
 }
 
-/* ── Título ── */
+/* ── Título ──
+   Fila flex en vez de botones position:absolute sobre un h1 a ancho
+   completo: así #btnTema/#btnAyuda reservan su hueco real (el que ocupan,
+   no una estimación) y el título usa como máximo el ancho que sobra entre
+   ambos, sin solaparse ni forzar una segunda línea de más. */
 .titulo-row {
-    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
     width: 100%;
-    text-align: center;
     margin-bottom: 0.5rem;
 }
 
 h1.burning {
+    flex: 1 1 auto;
+    min-width: 0;
     font-family: 'Arial Narrow', Arial, sans-serif;
     font-weight: 900;
-    font-size: clamp(2.4rem, 12vw, 3.8rem);
+    font-size: clamp(1.8rem, 9vw, 2.8rem);
     text-align: center;
     margin: 0;
-    /* Deja hueco a #btnTema/#btnAyuda (absolutos sobre .titulo-row): sin este
-       padding el título, a tamaños grandes, se dibuja justo debajo o encima
-       de los botones en vez de solo entre ellos. */
-    padding: 0 2.75rem;
     background: var(--titulo-grad);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -106,10 +110,7 @@ h1.burning {
 }
 
 #btnTema {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    flex: 0 0 auto;
     font-size: 1.2rem;
     color: rgba(255,255,255,.6);
     padding: 0.5rem;
@@ -118,10 +119,7 @@ h1.burning {
 #btnTema:active { color: #fff; }
 
 #btnAyuda {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    flex: 0 0 auto;
     font-size: 1.4rem;
     color: rgba(255,255,255,.6);
     padding: 0.5rem;
@@ -655,10 +653,12 @@ h1.burning {
     .tipojugador { font-size: 2rem; }
 }
 
-/* ── Pantallas grandes (tablets) ── */
+/* ── Pantallas grandes (tablets) ──
+   Sin padding-top propio: la mayoría de móviles ya superan 750px de alto
+   en píxeles CSS, y añadir aquí un padding aparte de la fila superior
+   dejaba un hueco de sobra que podía forzar scroll vertical. */
 @media (min-height: 750px) {
     .game-container {
-        padding-top: clamp(1rem, 4vh, 2.5rem);
         justify-content: center;
         min-height: unset;
     }
