@@ -148,9 +148,11 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       `cargarPrefs()`; si `localStorage` lanza, se sigue con el tema por defecto
 - [x] **Sin detección del idioma del dispositivo** — `cargarPrefs()` usa `navigator.language`
       (prefijo `en`) como idioma inicial cuando no hay `Idioma` guardado en `localStorage`
-- [ ] **Ficha de Play y `<name>` de `config.xml` solo en español** — pendiente: decisión del
-      usuario (nombre/descripción/capturas en inglés para la ficha de Play), no es un cambio de
-      código
+- [x] **Ficha de Play y `<name>` de `config.xml` solo en español** — textos ES/EN (nombre,
+      descripción breve y completa, dentro de los límites de Play Console) en
+      `store/play-store-listing.md`, listos para pegar en la ficha. Capturas quedan pendientes
+      (necesitan la app corriendo en dispositivo/emulador); `<name>` de `config.xml` se deja en
+      español, coincide con el nombre de la ficha ES y es solo la etiqueta del icono
 
 ## R2-P5 — Jugabilidad
 
