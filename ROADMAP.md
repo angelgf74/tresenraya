@@ -140,16 +140,17 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
 
 ## R2-P4 — Remates de i18n (derivados de la ronda 1)
 
-- [ ] **Destello en español antes de traducir** — el script inline del `<head>` precarga el tema
-      para evitar el parpadeo, pero no el idioma; `aplicarIdioma()` no corre hasta `load`/
-      `deviceready`, así que un usuario en inglés ve la interfaz en español un instante
-- [ ] **Ese script inline lee `localStorage` sin `try/catch`** — incoherente con el blindaje que
-      se aplicó en la ronda 1 a `cargarPrefs()`; si `localStorage` lanza, el script del `<head>`
-      revienta
-- [ ] **Sin detección del idioma del dispositivo** — en el primer arranque siempre entra en `es`,
-      aunque el móvil esté en inglés. Usar `navigator.language` como valor inicial
-- [ ] **Ficha de Play y `<name>` de `config.xml` solo en español** — ahora que la app tiene
-      interfaz en inglés, conviene traducir también nombre, descripción y capturas de la ficha
+- [x] **Destello en español antes de traducir** — `aplicarIdioma()` ya no espera a `load`/
+      `deviceready`: nuevo listener `DOMContentLoaded` en `app.js` llama a `cargarPrefs()` +
+      `aplicarIdioma()` en cuanto el DOM está listo, sin depender del puente de Cordova (que
+      `crearCeldasDOM`/`bindEvents`/`iniciarJuego`/`initAdMob` sí necesitan y siguen esperando)
+- [x] **Ese script inline lee `localStorage` sin `try/catch`** — envuelto en try/catch igual que
+      `cargarPrefs()`; si `localStorage` lanza, se sigue con el tema por defecto
+- [x] **Sin detección del idioma del dispositivo** — `cargarPrefs()` usa `navigator.language`
+      (prefijo `en`) como idioma inicial cuando no hay `Idioma` guardado en `localStorage`
+- [ ] **Ficha de Play y `<name>` de `config.xml` solo en español** — pendiente: decisión del
+      usuario (nombre/descripción/capturas en inglés para la ficha de Play), no es un cambio de
+      código
 
 ## R2-P5 — Jugabilidad
 

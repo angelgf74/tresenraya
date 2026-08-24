@@ -16,8 +16,12 @@
     <title>Tres en Raya</title>
     <script>
         (function () {
-            var t = localStorage.getItem('Tema');
-            if (t) document.documentElement.setAttribute('data-tema', t);
+            try {
+                var t = localStorage.getItem('Tema');
+                if (t) document.documentElement.setAttribute('data-tema', t);
+            } catch (e) {
+                // localStorage no disponible (incógnito, cuota, etc.) — se sigue con el tema por defecto
+            }
         })();
     </script>
     <link rel="stylesheet" href="css/app.css" />

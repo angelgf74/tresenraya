@@ -54,7 +54,11 @@ function cargarPrefs() {
         if (sil !== null) Estado.silenciado = sil === 'true';
 
         const idi = localStorage.getItem('Idioma');
-        if (idi === 'es' || idi === 'en') Estado.idioma = idi;
+        if (idi === 'es' || idi === 'en') {
+            Estado.idioma = idi;
+        } else if (/^en/i.test(navigator.language || '')) {
+            Estado.idioma = 'en';
+        }
 
         const n = parseInt(localStorage.getItem('Nivel'));
         if (!isNaN(n)) Estado.nivel = n;
@@ -827,6 +831,14 @@ function bindEvents() {
 }
 
 // ── Arranque ───────────────────────────────────────────
+// La traducción no depende de Cordova: se aplica ya en DOMContentLoaded,
+// mucho antes que 'deviceready'/'load', para evitar el parpadeo en
+// español en dispositivos con el idioma en inglés.
+document.addEventListener('DOMContentLoaded', () => {
+    cargarPrefs();
+    aplicarIdioma();
+});
+
 document.addEventListener('deviceready', async () => {
     cargarPrefs();
     crearCeldasDOM();
