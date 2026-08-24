@@ -164,6 +164,18 @@ async function mostrarInterstitial() {
     }
 }
 
+// ── Iconos ─────────────────────────────────────────────
+// Los iconos son SVG del sprite de index.html, no glifos de una fuente: para
+// cambiar uno se reapunta el <use>, y para generarlo desde JS se usa svgIco().
+// .ico mide 1em, así que el tamaño lo sigue mandando el font-size del contenedor.
+const svgIco = (id, clases) =>
+    `<svg class="ico${clases ? ' ' + clases : ''}" aria-hidden="true"><use href="#${id}"></use></svg>`;
+
+function ponIcono(contenedor, id) {
+    const uso = contenedor.querySelector('use');
+    if (uso) uso.setAttribute('href', `#${id}`);
+}
+
 // ── Renderizado ────────────────────────────────────────
 function renderTodo() {
     aplicarIdioma();
@@ -177,23 +189,18 @@ function renderTodo() {
     renderExtras();
 }
 
-// Los controles de icono son <button> con un <i> dentro: la clase del icono va
-// en el <i>, y la del estado (conturno/sinturno) en el propio boton.
+// Los controles de icono son <button> con un <svg> dentro: el dibujo se cambia
+// reapuntando el <use>, y la clase de estado (conturno/sinturno) va en el botón.
 function renderTema() {
-    const icono = document.querySelector('#btnTema i');
-    icono.className = Estado.tema === 'claro' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    ponIcono(document.getElementById('btnTema'), Estado.tema === 'claro' ? 'i-luna' : 'i-sol');
 }
 
 function renderVolumen() {
     document.getElementById('volSlider').value = Estado.volumen;
-    const btn   = document.getElementById('btnVolumen');
-    const icono = btn.querySelector('i');
-    const mudo  = Estado.silenciado || Estado.volumen === 0;
+    const btn  = document.getElementById('btnVolumen');
+    const mudo = Estado.silenciado || Estado.volumen === 0;
 
-    if (mudo)                      icono.className = 'fa-solid fa-volume-xmark';
-    else if (Estado.volumen <= 50) icono.className = 'fa-solid fa-volume-low';
-    else                           icono.className = 'fa-solid fa-volume-high';
-
+    ponIcono(btn, mudo ? 'i-vol-mudo' : Estado.volumen <= 50 ? 'i-vol-bajo' : 'i-vol-alto');
     btn.setAttribute('aria-label', t(mudo ? 'activarSonido' : 'silenciar'));
 }
 
@@ -205,7 +212,7 @@ function renderJugadores() {
         // asi que tiene el turno el que coincide con tablero.turno (idx + 1).
         const conTurno = Estado.tablero.turno === idx + 1 && !Estado.tablero.terminado;
 
-        btn.querySelector('i').className = esIa ? 'fa-brands fa-android' : 'fa-solid fa-user';
+        ponIcono(btn, esIa ? 'i-ia' : 'i-humano');
         btn.className = `tipojugador ${conTurno ? 'conturno' : 'sinturno'}`;
         btn.setAttribute('aria-label', t(esIa ? 'jugadorEsIA' : 'jugadorEsHumano', { n: idx + 1 }));
 
@@ -233,10 +240,12 @@ function renderTablero() {
             ficha === 2 ? t('casillaO', { n: idx + 1 }) :
             t('casillaVacia', { n: idx + 1 }));
 
-        if (ficha === 1 && !el.querySelector('.fa-times')) {
-            el.innerHTML = '<i class="fa-solid fa-times" aria-hidden="true"></i>';
-        } else if (ficha === 2 && !el.querySelector('.fa-circle')) {
-            el.innerHTML = '<i class="fa-regular fa-circle" aria-hidden="true"></i>';
+        // Solo se reescribe si cambia: si no, la ficha reiniciaría su animación
+        // de entrada en cada render.
+        if (ficha === 1 && !el.querySelector('.ico-x')) {
+            el.innerHTML = svgIco('i-x', 'ico-x');
+        } else if (ficha === 2 && !el.querySelector('.ico-o')) {
+            el.innerHTML = svgIco('i-o', 'ico-o');
         } else if (ficha === 0) {
             el.innerHTML = '';
         }
@@ -464,14 +473,11 @@ function abrirModalPartida() {
     let html;
     if (Estado.tablero.ganador === -1) {
         html = `<div class="modal-resultado"><b>${t('tablas')}</b>
-            <span class="fa-stack fa-2x">
-                <i class="far fa-circle fa-stack-2x" aria-hidden="true"></i>
-                <i class="fas fa-times fa-stack-1x" aria-hidden="true"></i>
-            </span></div>`;
+            ${svgIco('i-tablas', 'ico-grande ico-tablas')}</div>`;
     } else {
         const ficha = Estado.tablero.ganador === 1
-            ? `<i class="fas fa-times fa-3x" aria-hidden="true"></i>`
-            : `<i class="far fa-circle fa-3x" aria-hidden="true"></i>`;
+            ? svgIco('i-x', 'ico-grande ico-x')
+            : svgIco('i-o', 'ico-grande ico-o');
         html = `<div class="modal-resultado"><b>${t('ganador')}</b>${ficha}</div>`;
     }
     document.getElementById('modalBody').innerHTML = html;
@@ -482,8 +488,8 @@ function abrirModalPartida() {
 
 function abrirModalTorneo() {
     document.getElementById('iconoCampeon').innerHTML = Estado.ganadorTorneo === 1
-        ? `<i class="fas fa-times fa-3x" aria-hidden="true"></i>`
-        : `<i class="far fa-circle fa-3x" aria-hidden="true"></i>`;
+        ? svgIco('i-x', 'ico-grande ico-x')
+        : svgIco('i-o', 'ico-grande ico-o');
     document.getElementById('marcadorTorneo').textContent = `${Estado.marcador[1]} – ${Estado.marcador[2]}`;
     document.getElementById('modalTorneoBackdrop').style.display = '';
     document.getElementById('modalTorneo').style.display         = '';
@@ -706,8 +712,8 @@ function renderEstadisticas() {
     const pct = (n) => j === 0 ? '0%' : `${Math.round(n / j * 100)}%`;
     document.getElementById('statsBody').innerHTML = `
         <div class="stats-total">${t('partidasJugadas')}: <b>${j}</b></div>
-        <div class="stats-linea"><i class="fas fa-times ayuda-x" aria-hidden="true"></i> ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
-        <div class="stats-linea"><i class="far fa-circle ayuda-o" aria-hidden="true"></i> ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
+        <div class="stats-linea">${svgIco('i-x', 'ayuda-x')} ${t('victoriasX')}: <b>${Estado.estadisticas.victoriasX}</b> (${pct(Estado.estadisticas.victoriasX)})</div>
+        <div class="stats-linea">${svgIco('i-o', 'ayuda-o')} ${t('victoriasO')}: <b>${Estado.estadisticas.victoriasO}</b> (${pct(Estado.estadisticas.victoriasO)})</div>
         <div class="stats-linea">${t('tablasStats')}: <b>${Estado.estadisticas.tablas}</b> (${pct(Estado.estadisticas.tablas)})</div>`;
 }
 

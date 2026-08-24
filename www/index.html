@@ -3,13 +3,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <!-- Todo lo que pinta la interfaz (iconos SVG, fuentes, estilos) va dentro
+         del APK, así que no hace falta permitir ningún origen externo: la app
+         se ve igual sin conexión. Solo queda el hueco de gap:/ssl.gstatic.com
+         que necesita el puente de Cordova y el SDK de anuncios. -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-inline' 'unsafe-eval';
-                   style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com;
-                   font-src 'self' data: https://cdnjs.cloudflare.com https://ka-f.fontawesome.com https://fonts.gstatic.com;
-                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;
-                   img-src 'self' data: https:;
-                   media-src *;
+          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-inline';
+                   style-src 'self' 'unsafe-inline';
+                   font-src 'self';
+                   script-src 'self' 'unsafe-inline';
+                   img-src 'self' data:;
+                   media-src 'none';
                    connect-src gap: https://ssl.gstatic.com;">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
@@ -25,13 +29,40 @@
         })();
     </script>
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Work+Sans:wght@400;500;600&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
 </head>
 <body>
+
+<!-- ── Iconos ───────────────────────────────────────────
+     Sustituyen a Font Awesome: dibujados a trazo sobre una rejilla de 24, con
+     el mismo grosor y remates redondeados, para que la familia se vea uniforme
+     a cualquier tamaño. Se referencian con <svg class="ico"><use href="#i-..">,
+     y .ico mide 1em, así que heredan el font-size que ya tenía cada control. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M4.6 4.6l14.8 14.8M19.4 4.6L4.6 19.4"/></symbol>
+        <symbol id="i-o" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8"/></symbol>
+        <!-- Tablas: las dos fichas superpuestas. El color de cada parte va en
+             un style propio, porque los selectores CSS de fuera no alcanzan el
+             contenido clonado por <use>; las variables sí se heredan. -->
+        <symbol id="i-tablas" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8" style="stroke: var(--acento-o)"/><path d="M8.4 8.4l7.2 7.2M15.6 8.4l-7.2 7.2" style="stroke: var(--acento-x)"/></symbol>
+        <symbol id="i-luna" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.7 6.7 0 0 0 20 14.5Z"/></symbol>
+        <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.4M12 19v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.6 12h2.4M19 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></symbol>
+        <symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 1 1 3.9 2.6c-.9.4-1.4 1-1.4 2.1"/><circle cx="12" cy="17.2" r=".9" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-humano" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.6"/><path d="M4.5 19.5c0-4 3.4-6 7.5-6s7.5 2 7.5 6"/></symbol>
+        <symbol id="i-ia" viewBox="0 0 24 24"><rect x="4.5" y="8.5" width="15" height="10" rx="3"/><circle cx="9.2" cy="13.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.8" cy="13.5" r="1.1" fill="currentColor" stroke="none"/><path d="M12 8.5V5.4M9.6 5.4h4.8"/></symbol>
+        <symbol id="i-vol-alto" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.2V5.8L7.5 9.5Z"/><path d="M15.4 9.6a3.6 3.6 0 0 1 0 4.8M18 7.2a7 7 0 0 1 0 9.6"/></symbol>
+        <symbol id="i-vol-bajo" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.2V5.8L7.5 9.5Z"/><path d="M15.4 9.6a3.6 3.6 0 0 1 0 4.8"/></symbol>
+        <symbol id="i-vol-mudo" viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.2V5.8L7.5 9.5Z"/><path d="M15.6 10.2l4.4 4.4M20 10.2l-4.4 4.4"/></symbol>
+        <symbol id="i-deshacer" viewBox="0 0 24 24"><path d="M4.5 9.8h9.2a5.4 5.4 0 0 1 0 10.8H8.6M4.5 9.8l4-4M4.5 9.8l4 4"/></symbol>
+        <symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3.3 2"/></symbol>
+        <symbol id="i-reiniciar" viewBox="0 0 24 24"><path d="M19.2 12a7.2 7.2 0 1 1-2.3-5.3M19.4 4.4v4.5h-4.5"/></symbol>
+        <symbol id="i-trofeo" viewBox="0 0 24 24"><path d="M7 4h10v5.5a5 5 0 0 1-10 0Z"/><path d="M7 6H4.6A2.4 2.4 0 0 0 7 10M17 6h2.4A2.4 2.4 0 0 1 17 10M9.5 19.6h5M12 14.6v5"/></symbol>
+        <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M5.2 19.4v-5.6M12 19.4v-10.8M18.8 19.4v-7.6"/></symbol>
+        <symbol id="i-idioma" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M3.5 12h17M12 3.4c2.6 2.4 2.6 14.8 0 17.2M12 3.4c-2.6 2.4-2.6 14.8 0 17.2"/></symbol>
+        <symbol id="i-mando" viewBox="0 0 24 24"><rect x="2.8" y="7.8" width="18.4" height="9.8" rx="4.4"/><path d="M7.8 11.2v3.4M6.1 12.9h3.4"/><circle cx="15.8" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.1" cy="14.4" r="1.1" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-niveles" viewBox="0 0 24 24"><path d="M3.6 7.2h9.6M18.6 7.2h1.8M3.6 12h3.6M11.2 12h9.2M3.6 16.8h9.6M18.6 16.8h1.8"/><circle cx="15.9" cy="7.2" r="2.1"/><circle cx="9.2" cy="12" r="2.1"/><circle cx="15.9" cy="16.8" r="2.1"/></symbol>
+    </defs>
+</svg>
 
 <div class="game-container">
 
@@ -40,20 +71,20 @@
         <button type="button" class="btn-icono" id="btnTema"
                 data-i18n-title="cambiarTema" data-i18n-aria="cambiarTema"
                 title="Cambiar tema" aria-label="Cambiar tema">
-            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-luna"></use></svg>
         </button>
         <h1 class="burning" data-i18n="tituloApp">Tres en Raya</h1>
         <button type="button" class="btn-icono" id="btnAyuda"
                 data-i18n-title="ayuda" data-i18n-aria="ayuda"
                 title="Ayuda" aria-label="Ayuda">
-            <i class="far fa-question-circle" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-ayuda"></use></svg>
         </button>
     </div>
 
     <!-- Volumen -->
     <div class="vol-row">
         <button type="button" class="btn-icono" id="btnVolumen" aria-label="Silenciar">
-            <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-vol-alto"></use></svg>
         </button>
         <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80"
                data-i18n-aria="volumen" aria-label="Volumen" />
@@ -63,10 +94,10 @@
     <div id="capa-turnos">
         <div class="col-jugador" id="colJugador1">
             <button type="button" id="jug1" class="tipojugador conturno" aria-label="Jugador 1">
-                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <svg class="ico" aria-hidden="true"><use href="#i-humano"></use></svg>
             </button>
             <div class="ficha-indicator">
-                <i class="fa-solid fa-times" aria-hidden="true"></i>
+                <svg class="ico ico-x" aria-hidden="true"><use href="#i-x"></use></svg>
             </div>
         </div>
 
@@ -81,10 +112,10 @@
 
         <div class="col-jugador" id="colJugador2">
             <button type="button" id="jug2" class="tipojugador sinturno" aria-label="Jugador 2">
-                <i class="fa-brands fa-android" aria-hidden="true"></i>
+                <svg class="ico" aria-hidden="true"><use href="#i-ia"></use></svg>
             </button>
             <div class="ficha-indicator">
-                <i class="fa-regular fa-circle" aria-hidden="true"></i>
+                <svg class="ico ico-o" aria-hidden="true"><use href="#i-o"></use></svg>
             </div>
         </div>
     </div>
@@ -109,13 +140,13 @@
 
         <div class="bajo-tablero">
             <button class="btn-deshacer" id="btnDeshacer" style="display:none">
-                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span data-i18n="deshacer">Deshacer</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-deshacer"></use></svg> <span data-i18n="deshacer">Deshacer</span>
             </button>
             <div class="pensando" id="elPensando" style="display:none">
                 <span data-i18n="pensando">Pensando</span><span class="puntos"><span>.</span><span>.</span><span>.</span></span>
             </div>
             <div class="timer-display" id="elTimer" style="display:none">
-                <i class="fa-regular fa-clock" aria-hidden="true"></i> <span id="timerNum">15</span>
+                <svg class="ico" aria-hidden="true"><use href="#i-reloj"></use></svg> <span id="timerNum">15</span>
             </div>
         </div>
     </div>
@@ -123,44 +154,41 @@
     <!-- Marcador -->
     <div id="capa-marcador">
         <div class="col-marcador">
-            <i class="fa-solid fa-times marcador-icono" aria-hidden="true"></i>
+            <svg class="ico ico-x marcador-icono" aria-hidden="true"><use href="#i-x"></use></svg>
             <span class="marcador" id="marcadorX">0</span>
         </div>
         <div class="col-marcador">
-            <span class="fa-stack marcador-stack" aria-hidden="true">
-                <i class="fa-regular fa-circle fa-stack-2x" aria-hidden="true"></i>
-                <i class="fa-solid fa-times fa-stack-1x" aria-hidden="true"></i>
-            </span>
+            <svg class="ico marcador-icono ico-tablas" aria-hidden="true"><use href="#i-tablas"></use></svg>
             <span class="marcador" id="marcadorT">0</span>
         </div>
         <div class="col-marcador">
-            <i class="fa-regular fa-circle marcador-icono" aria-hidden="true"></i>
+            <svg class="ico ico-o marcador-icono" aria-hidden="true"><use href="#i-o"></use></svg>
             <span class="marcador" id="marcadorO">0</span>
         </div>
         <button class="btn-reset-marcador" id="btnResetMarcador" data-i18n-title="reiniciarMarcador" data-i18n-aria="reiniciarMarcador" title="Reiniciar marcador" aria-label="Reiniciar marcador">
-            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-reiniciar"></use></svg>
         </button>
     </div>
 
     <!-- Extras: timer / torneo -->
     <div class="extras-row">
         <button class="extra-btn" id="btnTimer" data-i18n-title="temporizadorTurno" data-i18n-aria="temporizadorTurno" title="Temporizador de turno" aria-label="Temporizador de turno">
-            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-reloj"></use></svg>
         </button>
         <button class="extra-btn" id="btnTorneo" data-i18n-title="modoTorneo" data-i18n-aria="modoTorneo" title="Modo torneo" aria-label="Modo torneo">
-            <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-trofeo"></use></svg>
         </button>
         <button class="extra-btn" id="btnStats" data-i18n-title="estadisticas" data-i18n-aria="estadisticas" title="Estadísticas" aria-label="Estadísticas">
-            <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-grafico"></use></svg>
         </button>
         <button class="extra-btn" id="btnIdioma" data-i18n-title="cambiarIdioma" data-i18n-aria="cambiarIdioma" title="Change to English" aria-label="Change to English">
-            <i class="fa-solid fa-language" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-idioma"></use></svg>
         </button>
     </div>
 
     <div class="config-row" id="configRow" style="display:none">
         <label class="config-label" id="configTimer" style="display:none">
-            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-reloj"></use></svg>
             <select class="config-select" id="selTiempoLimite">
                 <option value="10">10 s</option>
                 <option value="15" selected>15 s</option>
@@ -168,7 +196,7 @@
             </select>
         </label>
         <label class="config-label" id="configTorneo" style="display:none">
-            <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+            <svg class="ico" aria-hidden="true"><use href="#i-trofeo"></use></svg>
             <select class="config-select" id="selBestOf">
                 <option value="3" data-i18n="alMejorDe3">Al mejor de 3</option>
                 <option value="5" data-i18n="alMejorDe5">Al mejor de 5</option>
@@ -187,11 +215,11 @@
      data-i18n-aria="ariaResultadoPartida" aria-label="Resultado de la partida" style="display:none">
     <div class="modal-custom-content">
         <div class="modal-custom-header">
-            <i class="fas fa-trophy" aria-hidden="true"></i> <span data-i18n="partidaTerminada">Partida terminada</span>
+            <svg class="ico" aria-hidden="true"><use href="#i-trofeo"></use></svg> <span data-i18n="partidaTerminada">Partida terminada</span>
         </div>
         <div class="modal-custom-body" id="modalBody"></div>
         <div class="modal-custom-footer">
-            <button class="btn btn-primary btn-lg" id="btnAceptarModal" data-i18n="aceptar">Aceptar</button>
+            <button class="btn btn-primary" id="btnAceptarModal" data-i18n="aceptar">Aceptar</button>
         </div>
     </div>
 </div>
@@ -202,7 +230,7 @@
      data-i18n-aria="ariaResultadoTorneo" aria-label="Resultado del torneo" style="display:none">
     <div class="modal-custom-content">
         <div class="modal-custom-header">
-            <i class="fa-solid fa-trophy" aria-hidden="true"></i> <span data-i18n="torneoTerminado">¡Torneo terminado!</span>
+            <svg class="ico" aria-hidden="true"><use href="#i-trofeo"></use></svg> <span data-i18n="torneoTerminado">¡Torneo terminado!</span>
         </div>
         <div class="modal-custom-body">
             <div class="modal-resultado">
@@ -212,7 +240,7 @@
             </div>
         </div>
         <div class="modal-custom-footer">
-            <button class="btn btn-primary btn-lg" id="btnNuevoTorneo" data-i18n="nuevoTorneo">Nuevo torneo</button>
+            <button class="btn btn-primary" id="btnNuevoTorneo" data-i18n="nuevoTorneo">Nuevo torneo</button>
         </div>
     </div>
 </div>
@@ -223,12 +251,12 @@
      data-i18n-aria="estadisticas" aria-label="Estadísticas" style="display:none">
     <div class="modal-custom-content">
         <div class="modal-custom-header">
-            <i class="fa-solid fa-chart-simple" aria-hidden="true"></i> <span data-i18n="estadisticas">Estadísticas</span>
+            <svg class="ico" aria-hidden="true"><use href="#i-grafico"></use></svg> <span data-i18n="estadisticas">Estadísticas</span>
         </div>
         <div class="modal-custom-body" id="statsBody"></div>
         <div class="modal-custom-footer">
             <button class="btn btn-outline-danger" id="btnResetStats" data-i18n="borrarEstadisticas">Borrar estadísticas</button>
-            <button class="btn btn-primary btn-lg" id="btnCerrarStats" data-i18n="cerrar">Cerrar</button>
+            <button class="btn btn-primary" id="btnCerrarStats" data-i18n="cerrar">Cerrar</button>
         </div>
     </div>
 </div>
@@ -239,25 +267,25 @@
      data-i18n-aria="ayuda" aria-label="Ayuda" style="display:none">
     <div class="modal-custom-content ayuda-content">
         <div class="modal-custom-header">
-            <i class="far fa-question-circle" aria-hidden="true"></i> <span data-i18n="ayuda">Ayuda</span>
+            <svg class="ico" aria-hidden="true"><use href="#i-ayuda"></use></svg> <span data-i18n="ayuda">Ayuda</span>
         </div>
         <!-- tabindex="0": la ayuda tiene scroll propio y sin foco no se puede
              recorrer con el teclado -->
         <div class="modal-custom-body ayuda-body" tabindex="0">
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-gamepad" aria-hidden="true"></i> <span data-i18n="ayudaComoJugarTitulo">¿Cómo jugar?</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-mando"></use></svg> <span data-i18n="ayudaComoJugarTitulo">¿Cómo jugar?</span></h3>
                 <p data-i18n="ayudaComoJugarTexto">Coloca tu ficha en una casilla vacía. Gana el primero en completar una fila, columna o diagonal. Si se llenan todas las casillas sin ganador, es un empate.</p>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-times ayuda-x" aria-hidden="true"></i> <i class="fa-regular fa-circle ayuda-o" aria-hidden="true"></i> <span data-i18n="ayudaFichasTitulo">Fichas</span></h3>
+                <h3><svg class="ico ayuda-x" aria-hidden="true"><use href="#i-x"></use></svg> <svg class="ico ayuda-o" aria-hidden="true"><use href="#i-o"></use></svg> <span data-i18n="ayudaFichasTitulo">Fichas</span></h3>
                 <p data-i18n="ayudaFichasTexto">El jugador de la izquierda juega con <strong class="ayuda-x">X</strong> y el de la derecha con <strong class="ayuda-o">O</strong>. En cada nueva partida se alternan quién empieza.</p>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-user" aria-hidden="true"></i> <i class="fa-brands fa-android" aria-hidden="true"></i> <span data-i18n="ayudaTipoJugadorTitulo">Tipo de jugador</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-humano"></use></svg> <svg class="ico" aria-hidden="true"><use href="#i-ia"></use></svg> <span data-i18n="ayudaTipoJugadorTitulo">Tipo de jugador</span></h3>
                 <p data-i18n="ayudaTipoJugadorTexto">Pulsa el icono de cada jugador para cambiar entre <strong>humano</strong> e <strong>IA</strong>. Siempre debe haber al menos un jugador humano.</p>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-sliders" aria-hidden="true"></i> <span data-i18n="ayudaNivelTitulo">Nivel de dificultad</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-niveles"></use></svg> <span data-i18n="ayudaNivelTitulo">Nivel de dificultad</span></h3>
                 <ul class="ayuda-lista">
                     <li data-i18n="ayudaNivelFacil"><strong>Fácil</strong> — 2 jugadas por delante.</li>
                     <li data-i18n="ayudaNivelMedio"><strong>Medio</strong> — 3 jugadas por delante.</li>
@@ -266,20 +294,20 @@
                 </ul>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> <span data-i18n="ayudaDeshacerTitulo">Deshacer</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-deshacer"></use></svg> <span data-i18n="ayudaDeshacerTitulo">Deshacer</span></h3>
                 <p data-i18n="ayudaDeshacerTexto">En modo humano vs humano aparece el botón <strong>Deshacer</strong> para retirar la última ficha.</p>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-regular fa-clock" aria-hidden="true"></i> <span data-i18n="ayudaTemporizadorTitulo">Temporizador</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-reloj"></use></svg> <span data-i18n="ayudaTemporizadorTitulo">Temporizador</span></h3>
                 <p data-i18n="ayudaTemporizadorTexto">Activa el reloj con el botón del reloj. Cuando el tiempo se agota, se coloca una ficha aleatoria. Elige entre 10, 15 o 30 segundos.</p>
             </section>
             <section class="ayuda-seccion">
-                <h3><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span data-i18n="ayudaTorneoTitulo">Modo torneo</span></h3>
+                <h3><svg class="ico" aria-hidden="true"><use href="#i-trofeo"></use></svg> <span data-i18n="ayudaTorneoTitulo">Modo torneo</span></h3>
                 <p data-i18n="ayudaTorneoTexto">Juega al mejor de 3 o 5 partidas; gana quien antes alcance la mayoría de victorias.</p>
             </section>
         </div>
         <div class="modal-custom-footer">
-            <button class="btn btn-primary btn-lg" id="btnCerrarAyuda" data-i18n="cerrar">Cerrar</button>
+            <button class="btn btn-primary" id="btnCerrarAyuda" data-i18n="cerrar">Cerrar</button>
         </div>
     </div>
 </div>

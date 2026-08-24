@@ -245,17 +245,34 @@ arreglarlos.
       se abortan tras cada `await` si ha cambiado. De paso arregla que el modal de resultado se
       abriese sobre una partida nueva si se reiniciaba durante su pausa de 1600 ms
 
-## R3-P1 — La app no funciona sin conexión
+## R3-P1 — La app no funciona sin conexión ✔
 
-- [ ] **Ni una fuente ni un CSS de terceros va dentro del APK** — Font Awesome, Bootstrap y Google
-      Fonts se descargan de tres CDNs en cada arranque en frío (verificado: `assets/www/` solo
-      contiene `app.css` y los `js/` propios). En una instalación nueva sin cobertura **las X y las
-      O no se dibujan** (son glifos de Font Awesome), ni los avatares ni los botones de extras: el
-      juego queda inservible, y la ficha de Play afirma justo lo contrario. Además Font Awesome se
-      carga sin `integrity` (Bootstrap sí lo lleva)
-- [ ] **Peso desproporcionado** — Bootstrap entero (~230 KB) para 4 clases de botón y Font Awesome
-      entero (~100 KB más fuentes) para ~15 iconos. Pasando los iconos a SVG inline y escribiendo a
-      mano esos 4 estilos se eliminan las tres dependencias de red de golpe
+- [x] **Ni una fuente ni un CSS de terceros iba dentro del APK** — Font Awesome, Bootstrap y Google
+      Fonts se descargaban de tres CDNs en cada arranque en frío. En una instalación nueva sin
+      cobertura **las X y las O no se dibujaban** (eran glifos de Font Awesome), ni los avatares ni
+      los botones de extras: el juego quedaba inservible, y la ficha de Play afirma justo lo
+      contrario. Ahora no queda ninguna referencia externa en `www/` salvo `ssl.gstatic.com` en la
+      CSP, que es del SDK de anuncios y no pinta interfaz
+- [x] **Iconos propios en SVG** — sprite de 19 símbolos en `index.html`, dibujados a trazo sobre
+      una rejilla de 24 con el mismo grosor y remates, en lugar de los ~15 glifos de Font Awesome.
+      Se referencian con `<svg class="ico"><use href="#i-...">`, y `.ico` mide 1,15em, así que el
+      tamaño lo sigue mandando el `font-size` que ya tenía cada control (1em se quedaba corto: un
+      glifo llena su caja más que un dibujo sobre rejilla). Desde JS se cambian reapuntando el
+      `<use>` (`ponIcono()`) o se generan con `svgIco()`. El icono de tablas colorea círculo y aspa
+      con las variables de tema mediante un `style` propio, porque los selectores CSS externos no
+      alcanzan el contenido clonado por `<use>` pero las variables sí se heredan
+- [x] **Botones propios en vez de Bootstrap** — `.btn`, `.btn-primary` y `.btn-outline-danger`
+      escritos a mano (unas 30 líneas) sustituyen a la hoja entera de ~230 KB, que solo se cargaba
+      por 4 clases. De paso pasan a 48 px de alto mínimo, el objetivo táctil recomendado
+- [x] **Fuentes locales** — Bitter y Work Sans en `www/fonts` (88 KB en total: son variables, un
+      fichero por familia cubre todo el rango de pesos, subconjunto latino con acentos, eñe y
+      signos de apertura). El APK pasa de 2,89 a 2,97 MB y deja de descargar ~415 KB en el primer
+      arranque
+- [x] **CSP y whitelist al mínimo** — fuera `cdn.jsdelivr.net`, `cdnjs.cloudflare.com`,
+      `ka-f.fontawesome.com`, `fonts.googleapis.com` y `fonts.gstatic.com`, tanto de la CSP como de
+      los `<access origin>` de `config.xml`. Aprovechando el repaso caen también `'unsafe-eval'`
+      (solo hacía falta para Bootstrap) y `media-src *` (el sonido es WebAudio sintetizado), dos de
+      los puntos que R3-P3 dejaba pendientes
 
 ## R3-P2 — Play y cumplimiento
 
@@ -282,9 +299,8 @@ arreglarlos.
 - [ ] **Código muerto** — `window.setTema` en `sounds.js`, las variables CSS `--nivel-focus` y
       `--wash`, y las preferencias `SplashScreenDelay` / `AutoHideSplashScreen` de `config.xml`
       (cuyo plugin no está instalado)
-- [ ] **CSP más estricta** — `'unsafe-eval'` no lo necesita nadie (Bootstrap se usa solo como CSS)
-      y `media-src *` tampoco (el sonido es WebAudio sintetizado). `<access origin>` no incluye los
-      dominios de Google Fonts que sí están en la CSP
+- [x] **CSP más estricta** — hecho junto con R3-P1: fuera `'unsafe-eval'`, `media-src *` y todos
+      los orígenes de CDN, en la CSP y en los `<access origin>`
 - [ ] **`app.js` sin cobertura real** — 880 líneas con toda la máquina de estados y un único test
       (el de `puedeDeshacer` que trajo R3-P0), porque el resto llama a `getElementById` en cada
       paso. Separar la lógica de estado del renderizado permitiría probar de verdad los flujos

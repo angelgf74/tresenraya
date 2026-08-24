@@ -1,3 +1,48 @@
+/* ── Tipografía ──
+   Las dos familias van dentro del APK (www/fonts). Son fuentes variables, así
+   que un solo fichero por familia cubre todo el rango de pesos. Subconjunto
+   latino: cubre acentos, eñe y signos de apertura del español. */
+@font-face {
+    font-family: 'Bitter';
+    src: url('../fonts/bitter-latin.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Work Sans';
+    src: url('../fonts/worksans-latin.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ── Iconos ──
+   Sprite SVG de index.html. Miden 1em para heredar el font-size de su
+   contenedor, que es como se dimensionaban antes los glifos de la fuente de
+   iconos. El color sale de currentColor, así que basta con dar color al padre. */
+.ico {
+    /* 1.15em y no 1em: los glifos de una fuente de iconos llenan su caja más
+       que un dibujo sobre una rejilla de 24, así que a 1em todo se veía más
+       pequeño que antes de migrar. */
+    width: 1.15em;
+    height: 1.15em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+    /* Los iconos que acompañan a texto se alinean con la línea base */
+    vertical-align: -0.125em;
+}
+
+.ico-x { color: var(--acento-x); }
+.ico-o { color: var(--acento-o); }
+
+/* Ficha grande de los modales de resultado */
+.ico-grande { font-size: 3rem; stroke-width: 1.9; }
+
 /* ── Variables de tema ──
    Dirección "minimalista editorial": papel cálido en vez del gradiente
    turquesa/glossy original, tinta en vez de blanco, un acento por ficha
@@ -127,7 +172,7 @@ h1.burning {
 
 #btnTema {
     flex: 0 0 auto;
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     color: var(--ink-suave);
     padding: 0.5rem;
     transition: color .2s;
@@ -156,17 +201,17 @@ h1.burning {
     outline-offset: -4px;
 }
 
-/* ── Fichas (colores globales) ── */
-.fa-times  { color: var(--acento-x); }
-.fa-circle { color: var(--acento-o); }
-
 /* ── Animación de entrada de ficha ── */
 @keyframes fichaEntrada {
     from { opacity: 0; transform: scale(0.2); }
     to   { opacity: 1; transform: scale(1);   }
 }
-.celda i {
+.celda .ico {
     animation: fichaEntrada .22s cubic-bezier(.34, 1.56, .64, 1) both;
+    /* Trazo algo más grueso que el resto de iconos: a este tamaño el grosor
+       relativo del viewBox se queda fino y las fichas pierden presencia. */
+    stroke-width: 2.6;
+    vertical-align: 0;
 }
 
 /* ── Control de volumen ── */
@@ -180,14 +225,13 @@ h1.burning {
 }
 
 .vol-row #btnVolumen {
-    font-size: 1rem;
+    font-size: 1.15rem;
     cursor: pointer;
     color: var(--ink);
-    width: 1.2rem;
-    text-align: center;
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
     padding: 0.3rem;
-    box-sizing: content-box;
 }
 
 .vol-slider {
@@ -375,7 +419,7 @@ h1.burning {
     color: var(--ink-suave);
     border-radius: 20px;
     padding: 0.32rem 0.8rem;
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -464,7 +508,7 @@ h1.burning {
     background: transparent;
     border: none;
     color: var(--ink-suave);
-    font-size: 1rem;
+    font-size: 1.2rem;
     padding: 0 0.6rem;
     cursor: pointer;
 }
@@ -476,13 +520,6 @@ h1.burning {
 .marcador-icono {
     font-size: clamp(1.4rem, 7vw, 2.2rem);
     line-height: 1;
-}
-
-.marcador-stack {
-    font-size: clamp(0.8rem, 4vw, 1.2rem);
-    line-height: 1;
-    width: 2em;
-    height: 2em;
 }
 
 .marcador {
@@ -539,7 +576,7 @@ h1.burning {
     justify-content: center;
     gap: 0.4rem;
 }
-.modal-custom-header i {
+.modal-custom-header .ico {
     color: #B8502E;
 }
 
@@ -562,18 +599,49 @@ h1.burning {
     gap: 0.6rem;
 }
 
-/* El azul de Bootstrap por defecto desentonaba con la paleta de la app en
-   los botones de los modales; los modales son siempre claros (no dependen
-   de --acento-x, que cambia con el tema), así que aquí van fijos. */
-.modal-custom-footer .btn-primary {
+/* Botones de los modales.
+   Sustituyen a las clases de Bootstrap, que era la única razón para cargar la
+   hoja entera (~230 KB) desde un CDN. Los modales son siempre claros, no
+   dependen de --acento-x (que cambia con el tema), así que los colores van
+   fijos. Alto mínimo de 48 px: son el objetivo táctil principal de la app. */
+.btn {
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+    min-height: 48px;
+    padding: 0.7rem 1.5rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+
+.btn-primary {
     background-color: #B8502E;
     border-color: #B8502E;
+    color: #fff;
 }
-.modal-custom-footer .btn-primary:hover,
-.modal-custom-footer .btn-primary:focus,
-.modal-custom-footer .btn-primary:active {
-    background-color: #9C4325 !important;
-    border-color: #9C4325 !important;
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: #9C4325;
+    border-color: #9C4325;
+}
+
+/* Acción secundaria: algo más compacta, para que su etiqueta —la más larga de
+   la app— quepa junto al botón principal sin partirse en dos líneas. */
+.btn-outline-danger {
+    background-color: transparent;
+    border-color: #C6704F;
+    color: #A8452A;
+    font-size: 0.92rem;
+    padding: 0.7rem 1rem;
+}
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    background-color: #FBF0EB;
 }
 
 /* ── Movimiento reducido ──
@@ -581,7 +649,7 @@ h1.burning {
    `animation: none` indiscriminado dejaría los puntos de "Pensando" en su
    fotograma final (opacity 0), es decir, invisibles. */
 @media (prefers-reduced-motion: reduce) {
-    .celda i                        { animation: none; }
+    .celda .ico                     { animation: none; }
     .linea-ganadora                 { animation: none; stroke-dasharray: none; }
     .puntos span                    { animation: none; opacity: 1; }
     .timer-display.timer-urgente    { animation: none; }

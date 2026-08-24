@@ -5,9 +5,8 @@
     <author email="angelgf@gmail.com" href="https://angelgf.com.es">Angel</author>
     <content src="index.html" />
     <allow-intent href="https://*/*" />
-    <access origin="https://cdn.jsdelivr.net" />
-    <access origin="https://cdnjs.cloudflare.com" />
-    <access origin="https://ka-f.fontawesome.com" />
+    <!-- La interfaz ya no carga nada de la red (iconos, fuentes y estilos van
+         dentro del APK). El único origen que queda es el del SDK de anuncios. -->
     <access origin="https://ssl.gstatic.com" />
     <platform name="android">
         <hook type="before_build" src="hooks/copy-android-config.js" />
