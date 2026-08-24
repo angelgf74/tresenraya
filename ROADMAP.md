@@ -172,3 +172,25 @@ que los dos caminos de arranque (Cordova y navegador) compartan el mismo cablead
       de un humano; en humano vs humano cada pulsación retira un nivel, y se puede repetir tantas
       veces como jugadas haya en la pila. Deshabilitado solo cuando no hay ningún jugador humano
       (`hayHumano()`) o mientras la IA está "pensando" (`Estado.esperandoIA`)
+
+## R2-P6 — Nueva estrategia de dificultad ✔
+
+- [x] **La dificultad dejó de basarse en la profundidad de búsqueda** — antes cada nivel recortaba
+      el árbol de minimax (2/3/6/9 jugadas por delante), lo que podía dar lugar a errores tácticos
+      "raros" en niveles bajos. Ahora `Juego.jugada()` busca siempre a profundidad completa (juego
+      perfecto) y el nivel solo decide `probabilidadAzar`, la probabilidad de ignorar la mejor
+      jugada y elegir una al azar: Fácil 50 %, Medio 25 %, Difícil 10 %, Imposible 0 %
+      (`NIVEL_FACIL`/`NIVEL_MEDIO`/`NIVEL_DIFICIL`/`NIVEL_IMPOSIBLE` en `app.js`). `mejorJugada()`
+      se mantiene intacta (la usan los tests de fuerza bruta) y ahora comparte con `jugada()` el
+      cálculo por celda vía `Juego._evaluarJugadas()`
+- [x] **El azar por nivel no es igual de "torpe" en todos** — en Fácil se elige entre cualquier
+      celda libre (puede regalar la partida); en Medio/Difícil se excluyen las jugadas que sean una
+      derrota forzada (`h <= Juego.UMBRAL_PERDEDORA`, `-1e8`), así que esos niveles varían la
+      jugada sin cometer errores catastróficos. `localStorage('Nivel')` con un valor de la época de
+      profundidades (2/3/6/9) se ignora y cae al nivel por defecto, en vez de leerse como un
+      porcentaje de azar sin sentido
+- [x] Tests reescritos con un PRNG determinista (`mulberry32`) que sustituye `Math.random`
+      temporalmente, para que las pruebas de dificultad (300 partidas por nivel contra un rival
+      perfecto) sean reproducibles y no intermitentes. Verificado: Fácil pierde más que Medio, que
+      pierde más que Difícil, que pierde más que Imposible (0 derrotas); y que `soloNoPerdedoras`
+      realmente excluye jugadas perdedoras cuando está activo

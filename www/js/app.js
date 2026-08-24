@@ -1,8 +1,19 @@
+// ── Dificultad de la IA ─────────────────────────────────
+// Estado.nivel guarda la probabilidad (%) de que la IA ignore la mejor
+// jugada y elija una al azar; la búsqueda siempre llega a profundidad
+// completa (juego perfecto). Solo en Fácil el azar es total: en el resto se
+// limita a jugadas que no sean una derrota forzada.
+const PROFUNDIDAD_IA = 9;
+const NIVEL_FACIL     = 50;
+const NIVEL_MEDIO     = 25;
+const NIVEL_DIFICIL   = 10;
+const NIVEL_IMPOSIBLE = 0;
+
 // ── Estado global ──────────────────────────────────────
 const Estado = {
     tablero: new Tablero(),
     marcador: [0, 0, 0], // [tablas, X, O]
-    nivel: 3,
+    nivel: NIVEL_MEDIO,
     turnoInicial: 1,
     esperandoIA: false,
     tipoJugador: [0, 1], // 0=humano, 1=IA
@@ -63,8 +74,11 @@ function cargarPrefs() {
             Estado.idioma = 'en';
         }
 
+        // Antes de R2-P6 'Nivel' guardaba una profundidad (2/3/6/9); si queda
+        // un valor de esa época en el dispositivo, se ignora y se usa el
+        // nivel por defecto en vez de leerlo como probabilidad de azar.
         const n = parseInt(localStorage.getItem('Nivel'));
-        if (!isNaN(n)) Estado.nivel = n;
+        if ([NIVEL_FACIL, NIVEL_MEDIO, NIVEL_DIFICIL, NIVEL_IMPOSIBLE].includes(n)) Estado.nivel = n;
 
         const jugs = JSON.parse(localStorage.getItem('Jugadores'));
         if (Array.isArray(jugs) && jugs.length === 2) Estado.tipoJugador = jugs;
@@ -366,7 +380,8 @@ async function jugadaIA() {
 
     await delay(380);
 
-    const celda = Juego.mejorJugada(Estado.tablero, Estado.nivel);
+    const soloNoPerdedoras = Estado.nivel !== NIVEL_FACIL;
+    const celda = Juego.jugada(Estado.tablero, PROFUNDIDAD_IA, Estado.nivel / 100, soloNoPerdedoras);
     if (celda >= 0) {
         guardarHistorial();
         Estado.tablero.hacerJugada(celda);

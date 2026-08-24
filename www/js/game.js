@@ -72,31 +72,60 @@ class Tablero {
 
 // ── Juego (minimax) ──────────────────────────────────
 const Juego = {
+    // Por debajo de este valor, la jugada es una derrota forzada (el
+    // heurístico solo baja de -1e8 cuando una línea rival ya está completa
+    // en el tablero terminal alcanzado con juego óptimo). Sirve para que
+    // jugada() pueda excluir esas jugadas al elegir al azar.
+    UMBRAL_PERDEDORA: -1e8,
+
     mejorJugada(tablero, profundidad) {
+        const evals = this._evaluarJugadas(tablero, profundidad);
+        if (evals.length === 0) return -1;
+
+        const mejorH = Math.max(...evals.map(e => e.h));
+        const candidatas = evals.filter(e => e.h === mejorH).map(e => e.celda);
+        return candidatas[Math.floor(Math.random() * candidatas.length)];
+    },
+
+    // Nivel de dificultad: la búsqueda siempre llega a profundidad completa
+    // (juego perfecto); lo que cambia entre niveles es `probabilidadAzar`,
+    // la probabilidad de ignorar la mejor jugada y elegir una al azar.
+    // `soloNoPerdedoras` limita ese azar a jugadas que no sean una derrota
+    // forzada (Medio/Difícil); en Fácil el azar es total, puede regalar la
+    // partida.
+    jugada(tablero, profundidad, probabilidadAzar, soloNoPerdedoras) {
+        const evals = this._evaluarJugadas(tablero, profundidad);
+        if (evals.length === 0) return -1;
+
+        if (probabilidadAzar > 0 && Math.random() < probabilidadAzar) {
+            const pool = soloNoPerdedoras
+                ? evals.filter(e => e.h > this.UMBRAL_PERDEDORA)
+                : evals;
+            const celdasAzar = (pool.length > 0 ? pool : evals).map(e => e.celda);
+            return celdasAzar[Math.floor(Math.random() * celdasAzar.length)];
+        }
+
+        const mejorH = Math.max(...evals.map(e => e.h));
+        const candidatas = evals.filter(e => e.h === mejorH).map(e => e.celda);
+        return candidatas[Math.floor(Math.random() * candidatas.length)];
+    },
+
+    // Ventana completa (-Infinity, Infinity) en cada rama: así el valor que
+    // devuelve _minimax es siempre exacto y las jugadas empatadas (o las no
+    // perdedoras) se detectan bien. Compartir alpha entre hermanas podaba
+    // alguna a un valor que solo es una cota, no el valor real, y eso rompía
+    // esas comparaciones.
+    _evaluarJugadas(tablero, profundidad) {
         const libres = tablero.celdasLibres();
-        if (libres.length === 0) return -1;
+        if (libres.length === 0) return [];
 
-        // Cada rama arranca con ventana completa (-Infinity, Infinity): así el
-        // valor que devuelve _minimax es siempre exacto y las jugadas
-        // empatadas se detectan bien. Compartir alpha entre hermanas (como
-        // antes) podaba alguna a un valor que solo es una cota, no el valor
-        // real, y eso rompía la comparación de empates.
         const aiPlayer = tablero.turno;
-        let mejorH = -Infinity;
-        let candidatas = [];
-
-        for (const celda of libres) {
+        return libres.map(celda => {
             const clon = tablero.clonar();
             clon.hacerJugada(celda);
             const h = this._minimax(clon, profundidad - 1, false, aiPlayer, -Infinity, Infinity);
-            if (h > mejorH) {
-                mejorH = h;
-                candidatas = [celda];
-            } else if (h === mejorH) {
-                candidatas.push(celda);
-            }
-        }
-        return candidatas[Math.floor(Math.random() * candidatas.length)];
+            return { celda, h };
+        });
     },
 
     _minimax(tablero, profundidad, esMax, aiPlayer, alpha, beta) {
