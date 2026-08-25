@@ -30,7 +30,28 @@ node recorta-png.js entrada.png salida.png 0 122 1220 2440
 Play pide un mínimo de 2 y admite hasta 8 por idioma. El orden del listado es el
 orden sugerido: la primera es la que más se ve.
 
-## Pendiente
+## Set en inglés (`en-US`)
 
-- **Set en inglés** para la ficha `en-US`. Son las mismas pantallas con el idioma
-  cambiado desde el botón de la app; si no se suben, Play reutiliza estas.
+Las mismas pantallas con el idioma cambiado desde el botón de la app. Play pide un
+mínimo de 2 por idioma, así que con estas dos ya se puede publicar la ficha en
+inglés; si no se suben, Play reutiliza las españolas.
+
+| Fichero | Qué muestra |
+|---|---|
+| `en-1-victoria.png` | Tablero con la línea ganadora |
+| `en-2-estadisticas.png` | Estadísticas, con el desglose contra la IA (`0W · 2L · 0D`) |
+
+Faltan los equivalentes de ayuda, humano contra IA, tema oscuro y torneo.
+
+## Cómo se repite el proceso
+
+1. `adb -s <serie> shell cmd notification set_dnd priority` — **importante**: sin
+   esto una notificación entrante se cuela en la captura. Ya pasó una vez.
+2. Llevar la app al estado que se quiere retratar.
+3. `adb -s <serie> exec-out screencap -p > crudo.png`
+4. `node store/recorta-png.js crudo.png store/capturas/salida.png 0 122 1220 2440`
+5. Al terminar: `adb -s <serie> shell cmd notification set_dnd off`
+
+Las coordenadas de los botones cambian según lo que esté visible (el selector de
+nivel se oculta en humano contra humano, la fila de configuración aparece con el
+torneo). Sacarlas con `uiautomator dump` en vez de a ojo.

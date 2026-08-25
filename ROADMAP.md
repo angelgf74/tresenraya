@@ -297,9 +297,11 @@ arreglarlos.
 - [ ] **Ficha de Play** — enlazar política de privacidad y **rehacer la declaración de datos**,
       que ya no debe declarar identificador de publicidad. Textos actualizados en
       `store/play-store-listing.md` ("Gratis, sin anuncios y sin registro"). Capturas rehechas:
-      seis en español en `store/capturas/`, del dispositivo real y recortadas a 1220×2440 (2:1, el
-      máximo que admite Play; la captura en crudo es 2,22:1 y se rechazaría). Falta el set en
-      inglés
+      seis en español y dos en inglés en `store/capturas/`, del dispositivo real y recortadas a
+      1220×2440 (2:1, el máximo que admite Play; la captura en crudo es 2,22:1 y se rechazaría).
+      Play pide un mínimo de dos por idioma, así que la ficha en inglés ya se puede publicar;
+      faltan sus equivalentes de ayuda, humano contra IA, tema oscuro y torneo, y el
+      procedimiento para repetirlas está en `store/capturas/README.md`
 - [x] **Con el modo torneo o el temporizador activos, el contenido desbordaba la pantalla** — la
       fila de configuración que aparece bajo los extras no cabía y quedaba cortada por el borde
       inferior, dejando a medias el selector de "al mejor de N" y el marcador del torneo.
