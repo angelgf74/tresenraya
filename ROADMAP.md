@@ -316,10 +316,18 @@ arreglarlos.
       `SplashScreenDelay` / `AutoHideSplashScreen` de `config.xml`, cuyo plugin no está instalado
 - [x] **CSP más estricta** — hecho junto con R3-P1: fuera `'unsafe-eval'`, `media-src *` y todos
       los orígenes de CDN, en la CSP y en los `<access origin>`
-- [ ] **`app.js` sin cobertura real** — 880 líneas con toda la máquina de estados y un único test
-      (el de `puedeDeshacer` que trajo R3-P0), porque el resto llama a `getElementById` en cada
-      paso. Separar la lógica de estado del renderizado permitiría probar de verdad los flujos
-      donde han aparecido los dos bugs de esta ronda
+- [x] **`app.js` sin cobertura real** — tenía un único test, porque cada paso llama a
+      `getElementById`. En vez de partir en dos las mil líneas de producción —refactor grande, sin
+      red y con la app en Play— se resolvió por el otro lado: `test/helpers/dom-falso.js`, un DOM
+      de mentira de unas 130 líneas que basta para ejecutar `app.js` entero fuera del navegador.
+      Se prueba así el código real, no una versión reescrita para poder probarla.
+      Es tosco a propósito (no parsea HTML ni entiende CSS: `querySelector` dentro de un elemento
+      mira su `innerHTML` como texto, que es todo lo que app.js pregunta), pero **los ids salen
+      del `index.html` de verdad y pedir uno inexistente revienta**: si app.js pasa a buscar un
+      elemento que nadie puso en el HTML, lo cazan los tests, y eso el linter no lo ve.
+      Cinco tests nuevos (`test/flujo.test.js`) recorren jugada, respuesta de la IA, deshacer y
+      fin de partida. Comprobado que dos de ellos fallan si se quitan los guardas de
+      `Estado.generacion`: son regresiones de verdad de los bugs de R3-P0, no decorado
 - [x] **La partida en curso no sobrevivía al cierre de la app** — solo persistían preferencias y
       estadísticas: cerrar a media partida la perdía, junto con el marcador y los modos de torneo
       y temporizador, que tampoco se guardaban. Nueva clave `Sesion` en `localStorage` con

@@ -103,7 +103,11 @@ module.exports = [
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'commonjs',
-            globals: { require: 'readonly', module: 'writable', __dirname: 'readonly', console: 'readonly' }
+            globals: {
+                require: 'readonly', module: 'writable', __dirname: 'readonly', console: 'readonly',
+                // Los tests de flujo esperan a los delay() de la app
+                setTimeout: 'readonly', clearTimeout: 'readonly', process: 'readonly'
+            }
         },
         rules: {
             'no-undef': 'error',
