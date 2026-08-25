@@ -5,12 +5,8 @@
     <author email="angelgf@gmail.com" href="https://angelgf.com.es">Angel</author>
     <content src="index.html" />
     <allow-intent href="https://*/*" />
-    <!-- La interfaz ya no carga nada de la red (iconos, fuentes y estilos van
-         dentro del APK). El único origen que queda es el del SDK de anuncios. -->
-    <access origin="https://ssl.gstatic.com" />
     <platform name="android">
         <hook type="before_build" src="hooks/copy-android-config.js" />
-        <hook type="before_compile" src="hooks/inject-build-config.js" />
         <preference name="Orientation" value="portrait" />
         <!-- 21 es el suelo real: play-services-ads 23.6.0, appcompat 1.7.1,
              webkit 1.14.0 y core-splashscreen 1.0.1 declaran minSdkVersion 21.

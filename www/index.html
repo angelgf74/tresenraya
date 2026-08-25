@@ -3,18 +3,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <!-- Todo lo que pinta la interfaz (iconos SVG, fuentes, estilos) va dentro
-         del APK, así que no hace falta permitir ningún origen externo: la app
-         se ve igual sin conexión. Solo queda el hueco de gap:/ssl.gstatic.com
-         que necesita el puente de Cordova y el SDK de anuncios. -->
+    <!-- Todo va dentro del APK y ya no hay anuncios, así que la app no hace
+         ni una petición de red: connect-src queda en 'none' y el único
+         esquema externo es gap:, que necesita el puente de Cordova. -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-inline';
+          content="default-src 'self' data: gap: 'unsafe-inline';
                    style-src 'self' 'unsafe-inline';
                    font-src 'self';
                    script-src 'self' 'unsafe-inline';
                    img-src 'self' data:;
                    media-src 'none';
-                   connect-src gap: https://ssl.gstatic.com;">
+                   connect-src 'none';">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <title>Tres en Raya</title>
@@ -316,7 +315,6 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="cordova.js"></script>
-<script src="js/build-config.js"></script>
 <script src="js/game.js"></script>
 <script src="js/sounds.js"></script>
 <script src="js/i18n.js"></script>

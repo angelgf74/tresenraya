@@ -34,9 +34,9 @@ CARACTERÍSTICAS
 • Español e inglés, con detección automática del idioma del dispositivo
 • Accesible: navegación completa por teclado, lectores de pantalla, foco
   visible y respeto a "reducir movimiento"
-• Sin registro, sin conexión necesaria para jugar
+• Sin conexión necesaria para jugar
 
-App gratuita con anuncios.
+Gratis, sin anuncios y sin registro.
 
 ---
 
@@ -69,6 +69,6 @@ FEATURES
 • Spanish and English, with automatic device language detection
 • Accessible: full keyboard navigation, screen reader support, visible focus
   and respects "reduce motion"
-• No sign-up, no connection needed to play
+• No connection needed to play
 
-Free app with ads.
+Free, no ads, no sign-up.

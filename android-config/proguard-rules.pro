@@ -1,5 +1,5 @@
 # ============================================================================
-#  Reglas R8 para Cordova + AdMob  (agf.tresenraya)
+#  Reglas R8 para Cordova  (agf.tresenraya)
 #  Fuente de verdad: android-config/proguard-rules.pro
 #  Se copia a platforms/android/app/proguard-rules.pro por el hook de Cordova.
 # ============================================================================
@@ -28,15 +28,6 @@
 # ── Codigo de la app ────────────────────────────────────────────────────────
 -keep class agf.tresenraya.** { *; }
 
-# ── Plugin cordova-plugin-admob-free ────────────────────────────────────────
-# AdMob.java se resuelve por reflexion desde config.xml; los executors y
-# listeners cuelgan de el.
--keep class name.ratson.cordova.admob.** { *; }
--dontwarn name.ratson.cordova.admob.**
-
-# ── Google Play Services Ads ────────────────────────────────────────────────
-# El SDK ya aporta sus propias reglas "consumer"; aqui solo se silencian los
-# avisos por clases opcionales ausentes del classpath.
--dontwarn com.google.android.gms.**
+# ── Avisos de clases opcionales ausentes del classpath ──────────────────────
 -dontwarn com.google.errorprone.annotations.**
 -dontwarn javax.annotation.**

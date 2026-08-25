@@ -13,20 +13,13 @@
   "author": "Angel <angelgf@gmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "cordova-admob-sdk": "^0.24.1",
     "cordova-android": "^15.1.0",
-    "cordova-plugin-admob-free": "^0.27.0",
-    "cordova-promise-polyfill": "^0.0.2",
     "eslint": "^10.9.0"
   },
   "cordova": {
     "platforms": [
       "android"
     ],
-    "plugins": {
-      "cordova-plugin-admob-free": {
-        "ADMOB_APP_ID": "ca-app-pub-8600791204816041~3403813497"
-      }
-    }
+    "plugins": {}
   }
 }

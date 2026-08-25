@@ -10,33 +10,6 @@
 //  app/build.gradle generado por Cordova.
 // ============================================================================
 
-// ─── Version del SDK de anuncios ────────────────────────────────────────────
-// El plugin cordova-admob-sdk declara play-services-ads y play-services-base
-// 11.0.4 (API de 2017) via project.properties, y Cordova los reescribe en
-// app/build.gradle en cada "prepare". Con 11.0.4 la compilacion falla:
-// InterstitialExecutor.java usa com.google.android.gms.ads.interstitial.*,
-// que no existe hasta la 19. Se corrige aqui para no depender de una edicion
-// manual de app/build.gradle, que "cordova prepare" borraria.
-// AdMob.java tambien usa GoogleApiAvailability/ConnectionResult, que viven en
-// play-services-base y NO llegan de forma transitiva desde play-services-ads
-// (este depende de play-services-basement), asi que hay que subir las dos.
-configurations.all {
-    resolutionStrategy.eachDependency { details ->
-        if (details.requested.group == 'com.google.android.gms' &&
-            details.requested.version == '11.0.4') {
-            switch (details.requested.name) {
-                case 'play-services-ads':
-                    details.useVersion '23.6.0'
-                    break
-                case 'play-services-base':
-                    details.useVersion '18.5.0'
-                    break
-            }
-            details.because 'El plugin fija 11.0.4, cuya API ya no compila'
-        }
-    }
-}
-
 ext.postBuildExtras = {
     android {
         buildTypes {

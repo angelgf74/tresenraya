@@ -45,11 +45,9 @@ module.exports = [
                 aplicarIdioma: 'readonly',  // i18n.js
                 TRADUCCIONES: 'readonly',   // i18n.js
                 Estado: 'readonly',         // app.js
-                APP_DEBUG: 'readonly',      // build-config.js (lo inyecta el hook)
 
                 // Del entorno Cordova / plugins
                 cordova: 'readonly',
-                admob: 'readonly',
                 webkitAudioContext: 'readonly',
                 AudioContext: 'readonly'
             }

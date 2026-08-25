@@ -276,17 +276,30 @@ arreglarlos.
 
 ## R3-P2 — Play y cumplimiento
 
-- [ ] **Sin consentimiento GDPR (UMP)** — `cordova-plugin-admob-free` 0.27.0 es de 2018 y no trae
-      CMP. AdMob lo exige para el EEE desde enero de 2024 y el público de la app es mayoritariamente
-      español: riesgo de restricción de la cuenta
-- [ ] **Plugin de anuncios abandonado** — siete años sin mantenimiento; ya requiere el
-      `resolutionStrategy` de `android-config/build-extras.gradle` para compilar (fija
-      `play-services-ads` 11.0.4, que se fuerza a 23.6.0). Con targetSdk 37 esto acabará rompiendo.
-      Salida: migrar a `admob-plus-cordova`
-- [ ] **Ficha de Play** — declarar el `AD_ID` (ya presente en el manifiesto) en el formulario de
-      seguridad de los datos y enlazar política de privacidad. Capturas rehechas: seis en
-      español en `store/capturas/`, del dispositivo real y recortadas a 1220×2440 (2:1, el máximo
-      que admite Play; la captura en crudo es 2,22:1 y se rechazaría). Falta el set en inglés
+- [x] **Fuera los anuncios** — la app servía anuncios sin pedir consentimiento, y AdMob exige un
+      CMP certificado para el EEE desde enero de 2024, con el público de la app mayoritariamente
+      español. Las tres salidas eran: añadir solo el consentimiento, migrar de plugin, o quitar
+      los anuncios.
+      Al mirar las opciones de cerca, migrar a `admob-plus-cordova` no era el refugio que parecía:
+      **no tiene ninguna versión estable** (el `latest` de npm es `2.0.0-alpha.19`), su última
+      publicación es de noviembre de 2024 y el último push al repositorio de abril de 2025, con 96
+      issues abiertas. Sí se descubrió que `cordova-plugin-consent` solo depende de
+      `com.google.android.ump:user-messaging-platform`, así que el consentimiento se podría haber
+      añadido sin tocar el plugin de anuncios — pero también es alpha.
+      Como los anuncios no generaban ingresos apreciables, se optó por quitarlos: es la única
+      opción que **reduce** el proyecto en vez de añadirle deuda. Con ellos se van el CMP
+      pendiente, el permiso `AD_ID`, la declaración de datos de Play, el plugin muerto de 2018, el
+      `resolutionStrategy` que hacía falta para que compilara, las reglas de ProGuard del SDK y
+      todo el mecanismo `APP_DEBUG` (`hooks/inject-build-config.js` y `www/js/build-config.js`),
+      que existía solo para el `isTesting` de los anuncios.
+      La app deja de hacer una sola petición de red: la CSP pasa a `connect-src 'none'` y no queda
+      ningún `<access origin>`
+- [ ] **Ficha de Play** — enlazar política de privacidad y **rehacer la declaración de datos**,
+      que ya no debe declarar identificador de publicidad. Textos actualizados en
+      `store/play-store-listing.md` ("Gratis, sin anuncios y sin registro"). Capturas rehechas:
+      seis en español en `store/capturas/`, del dispositivo real y recortadas a 1220×2440 (2:1, el
+      máximo que admite Play; la captura en crudo es 2,22:1 y se rechazaría). Falta el set en
+      inglés
 - [x] **Con el modo torneo o el temporizador activos, el contenido desbordaba la pantalla** — la
       fila de configuración que aparece bajo los extras no cabía y quedaba cortada por el borde
       inferior, dejando a medias el selector de "al mejor de N" y el marcador del torneo.
