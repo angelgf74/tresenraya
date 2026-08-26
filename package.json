@@ -1,7 +1,7 @@
 {
   "name": "agf.tresenraya",
   "displayName": "Tres en Raya",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "Juego Tres en Raya con IA minimax y modo multijugador para Android (Cordova).",
   "scripts": {
     "test": "node --test \"test/*.test.js\"",

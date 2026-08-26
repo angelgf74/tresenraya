@@ -26,9 +26,11 @@ CARACTERÍSTICAS
 • 4 niveles de dificultad, de Fácil a Imposible (IA minimax con poda alfa-beta)
 • Juega contra la IA o con otra persona en el mismo dispositivo
 • Modo torneo al mejor de 3 o 5 partidas
-• Estadísticas de partidas jugadas, victorias y tablas
+• Estadísticas de partidas jugadas, victorias y tablas, con desglose por
+  nivel contra la IA
 • Temporizador de turno opcional
-• Deshacer jugada en partidas humano contra humano
+• Deshacer jugada, también contra la IA
+• La partida en curso se guarda sola: sigue donde la dejaste al volver a abrir
 • Tema claro y oscuro
 • Sonido con control de volumen y silencio
 • Español e inglés, con detección automática del idioma del dispositivo
@@ -61,9 +63,10 @@ FEATURES
   pruning)
 • Play against the AI or with another person on the same device
 • Tournament mode, best of 3 or 5 games
-• Stats for games played, wins and draws
+• Stats for games played, wins and draws, broken down by level against the AI
 • Optional turn timer
-• Undo move in human vs human games
+• Undo move, against the AI too
+• Your game in progress is saved automatically: pick up where you left off
 • Light and dark theme
 • Sound with volume control and mute
 • Spanish and English, with automatic device language detection
