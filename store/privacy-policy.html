@@ -1,0 +1,260 @@
+<title>Privacidad de Tres en Raya</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@700;800&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper:      #FAF7F1;
+    --paper-deep: #F2ECE0;
+    --ink:        #26221B;
+    --ink-soft:   #736C5E;
+    --card:       #FFFFFF;
+    --line:       #E4DDCE;
+    --terracotta: #B8502E;
+    --teal:       #3E6E63;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #1B1914;
+      --paper-deep: #131210;
+      --ink:        #F1ECE1;
+      --ink-soft:   #A79D87;
+      --card:       #221F19;
+      --line:       rgba(255,255,255,.10);
+      --terracotta: #D9835E;
+      --teal:       #6FA99B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #1B1914;
+    --paper-deep: #131210;
+    --ink:        #F1ECE1;
+    --ink-soft:   #A79D87;
+    --card:       #221F19;
+    --line:       rgba(255,255,255,.10);
+    --terracotta: #D9835E;
+    --teal:       #6FA99B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+    color: var(--ink);
+    font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 1.1rem;
+  }
+
+  .idiomas { display: flex; gap: 0.9rem; }
+  .idiomas a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .idiomas a:hover, .idiomas a:focus-visible { color: var(--terracotta); border-bottom-color: var(--terracotta); }
+
+  h1 {
+    font-family: 'Bitter', Georgia, serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.4rem;
+    text-wrap: balance;
+  }
+
+  .fecha { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 2.4rem; }
+
+  .resumen {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.5rem 1.6rem;
+    margin-bottom: 3rem;
+  }
+  .resumen p { margin: 0; font-size: 1.06rem; }
+  .resumen strong { color: var(--terracotta); }
+
+  section { margin-bottom: 2.6rem; }
+  section:last-of-type { margin-bottom: 0; }
+
+  h2 {
+    font-family: 'Bitter', Georgia, serif;
+    font-weight: 700;
+    font-size: 1.28rem;
+    margin: 0 0 0.9rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--line);
+  }
+  section:first-of-type h2 { border-top: none; padding-top: 0; }
+
+  p { margin: 0 0 0.9rem; max-width: 62ch; }
+  p:last-child { margin-bottom: 0; }
+
+  ul { margin: 0.9rem 0; padding-left: 1.3rem; max-width: 62ch; }
+  li { margin-bottom: 0.45rem; }
+  li:last-child { margin-bottom: 0; }
+
+  code {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+  }
+
+  a { color: var(--terracotta); }
+  a:hover { color: var(--teal); }
+
+  .pie {
+    margin-top: 3.5rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  #en { display: none; }
+</style>
+
+<div class="page">
+
+  <div id="es">
+    <p class="eyebrow">
+      <span>Política de privacidad</span>
+      <span class="idiomas"><a href="#en" onclick="document.getElementById('es').style.display='none';document.getElementById('en').style.display='block';return false;">English</a></span>
+    </p>
+
+    <h1>Tres en Raya</h1>
+    <p class="fecha">Última actualización: 26 de agosto de 2026</p>
+
+    <div class="resumen">
+      <p><strong>En una frase:</strong> esta app no envía ni recibe nada. Todo lo que guarda —tus ajustes, tus estadísticas, la partida en curso— se queda en tu dispositivo y nunca sale de él.</p>
+    </div>
+
+    <section>
+      <h2>Quién ofrece esta app</h2>
+      <p>Tres en Raya (<code>agf.tresenraya</code>) es una app de tres en raya para Android, desarrollada por Ángel. Puedes escribir a <a href="mailto:angelgf@gmail.com">angelgf@gmail.com</a> con cualquier duda sobre esta política.</p>
+    </section>
+
+    <section>
+      <h2>Qué datos recoge la app</h2>
+      <p>Ninguno. La app no tiene servidor, no hace ninguna petición de red desde su interfaz y no existe ningún sitio al que tus datos puedan viajar. Esto no es una promesa sin más: la política de seguridad de contenido de la app (<code>Content-Security-Policy: connect-src 'none'</code>) bloquea a nivel técnico cualquier conexión saliente desde la pantalla del juego.</p>
+      <p>No se pide registro ni cuenta. No hay identificador de usuario, de dispositivo ni de publicidad. No hay analítica ni seguimiento de ningún tipo.</p>
+    </section>
+
+    <section>
+      <h2>Qué se guarda, y dónde</h2>
+      <p>La app guarda una pequeña cantidad de datos <strong>solo en el almacenamiento local de tu dispositivo</strong> (<code>localStorage</code> del navegador integrado), para recordar cómo la dejaste:</p>
+      <ul>
+        <li>Tema (claro u oscuro), idioma, volumen y silencio</li>
+        <li>Nivel de dificultad y si cada jugador es humano o IA</li>
+        <li>Estadísticas de partidas jugadas, ganadas y empatadas, incluido el desglose por nivel contra la IA</li>
+        <li>La partida en curso, para poder retomarla si cierras la app a medias</li>
+      </ul>
+      <p>Nada de esto identifica a una persona, nada sale del dispositivo, y el desarrollador no tiene acceso a ello. Puedes borrarlo en cualquier momento desde el propio botón "Borrar estadísticas" de la app, desactivando el juego desde Ajustes del sistema → Aplicaciones → Tres en Raya → Almacenamiento, o desinstalando la app.</p>
+    </section>
+
+    <section>
+      <h2>Anuncios y terceros</h2>
+      <p>Versiones anteriores a la 1.0.25 mostraban anuncios de Google AdMob. Desde la 1.0.25 la app no incluye ningún SDK de anuncios, de analítica ni de terceros de ningún tipo.</p>
+    </section>
+
+    <section>
+      <h2>Permisos de Android</h2>
+      <p>El manifiesto de la app declara el permiso <code>android.permission.INTERNET</code>, que exige el propio motor de la aplicación (WebView de Cordova) para poder existir como componente del sistema, aunque el contenido de la app no lo usa: como se explica arriba, la política de seguridad de contenido bloquea cualquier conexión de red desde la pantalla del juego. No se solicita ningún otro permiso: ni cámara, ni ubicación, ni contactos, ni almacenamiento externo.</p>
+    </section>
+
+    <section>
+      <h2>Menores de edad</h2>
+      <p>La app no recoge datos de nadie, independientemente de su edad. Es adecuada para todos los públicos.</p>
+    </section>
+
+    <section>
+      <h2>Cambios en esta política</h2>
+      <p>Si esta política cambia, se actualizará esta misma página y la fecha de arriba. No hay boletín ni aviso por correo porque, como ya se explica arriba, esta app no recoge tu correo ni ningún otro dato de contacto.</p>
+    </section>
+
+    <div class="pie">Tres en Raya — <code>agf.tresenraya</code> · <a href="mailto:angelgf@gmail.com">angelgf@gmail.com</a></div>
+  </div>
+
+  <div id="en">
+    <p class="eyebrow">
+      <span>Privacy policy</span>
+      <span class="idiomas"><a href="#es" onclick="document.getElementById('en').style.display='none';document.getElementById('es').style.display='block';return false;">Español</a></span>
+    </p>
+
+    <h1>Tic-Tac-Toe</h1>
+    <p class="fecha">Last updated: August 26, 2026</p>
+
+    <div class="resumen">
+      <p><strong>In one sentence:</strong> this app sends and receives nothing. Everything it stores — your settings, your stats, the game in progress — stays on your device and never leaves it.</p>
+    </div>
+
+    <section>
+      <h2>Who offers this app</h2>
+      <p>Tic-Tac-Toe (<code>agf.tresenraya</code>) is a tic-tac-toe app for Android, developed by Ángel. You can write to <a href="mailto:angelgf@gmail.com">angelgf@gmail.com</a> with any question about this policy.</p>
+    </section>
+
+    <section>
+      <h2>What data the app collects</h2>
+      <p>None. The app has no server, makes no network request from its interface, and there is nowhere for your data to travel to. This isn't just a promise: the app's own content security policy (<code>Content-Security-Policy: connect-src 'none'</code>) technically blocks any outgoing connection from the game screen.</p>
+      <p>No sign-up or account is required. There is no user, device, or advertising identifier. No analytics or tracking of any kind.</p>
+    </section>
+
+    <section>
+      <h2>What is stored, and where</h2>
+      <p>The app stores a small amount of data <strong>only in your device's local storage</strong> (the built-in browser's <code>localStorage</code>), to remember how you left it:</p>
+      <ul>
+        <li>Theme (light or dark), language, volume and mute</li>
+        <li>Difficulty level and whether each player is human or AI</li>
+        <li>Stats for games played, won and drawn, including the breakdown by level against the AI</li>
+        <li>The game in progress, so you can pick it back up if you close the app mid-match</li>
+      </ul>
+      <p>None of this identifies a person, none of it leaves the device, and the developer has no access to it. You can clear it at any time from the app's own "Clear statistics" button, from your system Settings → Apps → Tic-Tac-Toe → Storage, or by uninstalling the app.</p>
+    </section>
+
+    <section>
+      <h2>Ads and third parties</h2>
+      <p>Versions prior to 1.0.25 showed Google AdMob ads. As of 1.0.25 the app includes no ad, analytics, or third-party SDK of any kind.</p>
+    </section>
+
+    <section>
+      <h2>Android permissions</h2>
+      <p>The app's manifest declares the <code>android.permission.INTERNET</code> permission, required by the app's own engine (Cordova's WebView) to exist as a system component, even though the app's content doesn't use it: as explained above, the content security policy blocks any network connection from the game screen. No other permission is requested: no camera, location, contacts, or external storage.</p>
+    </section>
+
+    <section>
+      <h2>Children</h2>
+      <p>The app collects no data from anyone, regardless of age. It's suitable for all audiences.</p>
+    </section>
+
+    <section>
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes, this same page and the date above will be updated. There's no newsletter or email notice because, as explained above, this app doesn't collect your email or any other contact information.</p>
+    </section>
+
+    <div class="pie">Tic-Tac-Toe — <code>agf.tresenraya</code> · <a href="mailto:angelgf@gmail.com">angelgf@gmail.com</a></div>
+  </div>
+
+</div>
