@@ -32,16 +32,17 @@ orden sugerido: la primera es la que más se ve.
 
 ## Set en inglés (`en-US`)
 
-Las mismas pantallas con el idioma cambiado desde el botón de la app. Play pide un
-mínimo de 2 por idioma, así que con estas dos ya se puede publicar la ficha en
-inglés; si no se suben, Play reutiliza las españolas.
+Las mismas seis pantallas que el set español, con el idioma cambiado desde el
+botón de la app.
 
 | Fichero | Qué muestra |
 |---|---|
 | `en-1-victoria.png` | Tablero con la línea ganadora |
 | `en-2-estadisticas.png` | Estadísticas, con el desglose contra la IA (`0W · 2L · 0D`) |
-
-Faltan los equivalentes de ayuda, humano contra IA, tema oscuro y torneo.
+| `en-3-ayuda.png` | Ayuda en inglés |
+| `en-4-vs-ia.png` | Humano contra IA en nivel Impossible, con Undo disponible |
+| `en-5-tema-oscuro.png` | Tema oscuro |
+| `en-6-torneo.png` | Modo torneo, al mejor de 3 |
 
 ## Cómo se repite el proceso
 
