@@ -121,8 +121,14 @@ if ($Modo -eq 'apk') {
     # Ya con el APK a salvo: si aqui falta el movil, no se ha perdido el build
     # y basta con enchufarlo y lanzar .\install-usb.ps1
     Write-Host "`n[2/2] Instalando por USB..." -ForegroundColor Cyan
+    # adb escribe a stderr mensajes puramente informativos (p.ej. "daemon not
+    # running; starting now"); con $ErrorActionPreference = 'Stop' un 2>&1 los
+    # convierte en NativeCommandError y corta el script aunque adb funcione bien.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $devices = adb devices 2>&1 | Select-String -Pattern '\bdevice\b' | Where-Object { $_ -notmatch 'List of' }
     if (-not $devices) {
+        $ErrorActionPreference = $prevEAP
         Write-Host "El APK esta compilado, pero no hay ningun movil conectado." -ForegroundColor Yellow
         Write-Host "Conectalo y ejecuta: .\install-usb.ps1" -ForegroundColor Yellow
         exit 0
@@ -130,6 +136,7 @@ if ($Modo -eq 'apk') {
     $deviceId = ($devices[0].ToString() -split '\s+')[0].Trim()
     Write-Host "Dispositivo: $deviceId" -ForegroundColor DarkGray
     $result = adb -s $deviceId install -r $APK_PATH 2>&1
+    $ErrorActionPreference = $prevEAP
     Write-Host $result
     if ($result -match 'Success') {
         Write-Host "`nAPK instalado correctamente." -ForegroundColor Green
