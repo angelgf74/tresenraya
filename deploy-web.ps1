@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 
 $PROJECT_ROOT = $PSScriptRoot
 $WWW_SRC      = Join-Path $PROJECT_ROOT 'www'
-$PRIVACY_SRC  = Join-Path $PROJECT_ROOT 'store\privacy-policy.html'
+$PRIVACY_SRC  = Join-Path $PROJECT_ROOT 'playstore\fuentes\privacy-policy.html'
 $STAGING      = Join-Path $env:TEMP 'tresenraya-web-deploy'
 $REMOTE_HOST  = 'agfserver-angel'
 $REMOTE_DIR   = '/apps/tresenraya'
@@ -24,7 +24,7 @@ if (-not (Test-Path $WWW_SRC)) {
     exit 1
 }
 if (-not (Test-Path $PRIVACY_SRC)) {
-    Write-Host "ERROR: No existe store\privacy-policy.html" -ForegroundColor Red
+    Write-Host "ERROR: No existe playstore\fuentes\privacy-policy.html" -ForegroundColor Red
     exit 1
 }
 

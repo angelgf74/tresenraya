@@ -10,7 +10,7 @@ móvil es 1220×2712 (2,22:1) y **se rechazaría**. Quitando la barra de estado 
 y la de navegación (150 px) queda 2:1 exacto — y Play además recomienda no incluir
 las barras del sistema.
 
-El recorte lo hace `store/recorta-png.js` (Node puro, sin dependencias):
+El recorte lo hace `playstore/fuentes/recorta-png.js` (Node puro, sin dependencias):
 
 ```
 node recorta-png.js entrada.png salida.png 0 122 1220 2440
@@ -50,7 +50,7 @@ botón de la app.
    esto una notificación entrante se cuela en la captura. Ya pasó una vez.
 2. Llevar la app al estado que se quiere retratar.
 3. `adb -s <serie> exec-out screencap -p > crudo.png`
-4. `node store/recorta-png.js crudo.png store/capturas/salida.png 0 122 1220 2440`
+4. `node playstore/fuentes/recorta-png.js crudo.png playstore/fuentes/capturas/salida.png 0 122 1220 2440`
 5. Al terminar: `adb -s <serie> shell cmd notification set_dnd off`
 
 Las coordenadas de los botones cambian según lo que esté visible (el selector de

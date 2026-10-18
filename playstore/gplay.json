@@ -1,0 +1,7 @@
+{
+  "firma": {
+    "keystore": "keyStoreAGF.jks",
+    "alias": "agf",
+    "sha256": "EE:7F:86:92:BC:C9:79:90:D1:ED:18:45:09:9E:51:86:94:76:55:B7:BE:04:44:33:EF:1F:A2:49:3A:DB:6C:AA"
+  }
+}

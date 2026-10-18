@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
-# Instala en el movil, por USB, el APK ya compilado. No compila nada: para eso
-# esta deploy-release.ps1. Sirve para reinstalar rapido, o cuando el movil se
-# desconecto a mitad y solo falta el paso de instalar.
+# Instala en el movil, por USB, el APK firmado mas reciente de release/. No
+# compila nada: para eso esta "gplay compilar --apk". Sirve para reinstalar
+# rapido, o cuando el movil se desconecto a mitad y solo falta el paso de instalar.
 #
 # Uso:
 #   .\install-usb.ps1                → espera al movil, instala y abre la app
@@ -19,15 +19,18 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $RAIZ     = $PSScriptRoot
-$APK      = Join-Path $RAIZ 'platforms\android\app\build\outputs\apk\release\app-release.apk'
+$RELEASE  = Join-Path $RAIZ 'release'
 $PAQUETE  = 'agf.tresenraya'
 $ACTIVITY = "$PAQUETE/$PAQUETE.MainActivity"
 
 # ── 1. El APK ────────────────────────────────────────────────────────────────
-if (-not (Test-Path $APK)) {
+# El mas reciente de los que deja "gplay compilar --apk" (<app>-<version>-vc<code>.apk).
+$APK = Get-ChildItem $RELEASE -Filter '*.apk' -File -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName
+if (-not $APK) {
     Write-Host "ERROR: no hay ningun APK compilado en:" -ForegroundColor Red
-    Write-Host "  $APK"
-    Write-Host "Compilalo primero con: .\deploy-release.ps1" -ForegroundColor Yellow
+    Write-Host "  $RELEASE"
+    Write-Host "Compilalo primero con: gplay compilar --apk" -ForegroundColor Yellow
     exit 1
 }
 
@@ -49,7 +52,7 @@ if ($masNuevo -and $masNuevo.LastWriteTime -gt $apkInfo.LastWriteTime) {
     Write-Host "AVISO: hay codigo mas nuevo que el APK." -ForegroundColor Yellow
     Write-Host "  $rel se toco el $($masNuevo.LastWriteTime.ToString('dd/MM HH:mm'))" -ForegroundColor Yellow
     Write-Host "  Se instalara el APK anterior, sin esos cambios." -ForegroundColor Yellow
-    Write-Host "  Para incluirlos: .\deploy-release.ps1" -ForegroundColor Yellow
+    Write-Host "  Para incluirlos: gplay compilar --apk" -ForegroundColor Yellow
     Write-Host ""
 }
 

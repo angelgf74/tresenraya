@@ -1,0 +1,26 @@
+**Descripción completa**
+
+¿Te atreves a ganarle a una IA que nunca pierde?
+
+Tres en Raya es el clásico juego de siempre, con un motor de inteligencia
+artificial que calcula cada partida hasta el final. Elige el nivel que se
+ajuste a ti, desde partidas relajadas hasta el reto imposible de vencer a la
+IA perfecta.
+
+CARACTERÍSTICAS
+• 4 niveles de dificultad, de Fácil a Imposible (IA minimax con poda alfa-beta)
+• Juega contra la IA o con otra persona en el mismo dispositivo
+• Modo torneo al mejor de 3 o 5 partidas
+• Estadísticas de partidas jugadas, victorias y tablas, con desglose por
+  nivel contra la IA
+• Temporizador de turno opcional
+• Deshacer jugada, también contra la IA
+• La partida en curso se guarda sola: sigue donde la dejaste al volver a abrir
+• Tema claro y oscuro
+• Sonido con control de volumen y silencio
+• Español e inglés, con detección automática del idioma del dispositivo
+• Accesible: navegación completa por teclado, lectores de pantalla, foco
+  visible y respeto a "reducir movimiento"
+• Sin conexión necesaria para jugar
+
+Gratis, sin anuncios y sin registro.
