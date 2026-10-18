@@ -8,10 +8,11 @@
     <platform name="android">
         <hook type="before_build" src="hooks/copy-android-config.js" />
         <preference name="Orientation" value="portrait" />
-        <!-- 21 es el suelo real: play-services-ads 23.6.0, appcompat 1.7.1,
-             webkit 1.14.0 y core-splashscreen 1.0.1 declaran minSdkVersion 21.
-             El 24 anterior era solo el valor por defecto de cordova-android 15. -->
-        <preference name="android-minSdkVersion" value="21" />
+        <!-- 24 lo exige la protección automática de Play (Integridad de la app):
+             con 21 rechaza la subida. Las librerías (play-services-ads 23.6.0,
+             appcompat 1.7.1, webkit 1.14.0 y core-splashscreen 1.0.1) admitirían
+             21. Es también el valor por defecto de cordova-android 15. -->
+        <preference name="android-minSdkVersion" value="24" />
         <preference name="android-targetSdkVersion" value="37" />
         <preference name="Fullscreen" value="false" />
         <preference name="StatusBarOverlaysWebView" value="false" />
